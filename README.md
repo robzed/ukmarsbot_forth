@@ -13,4 +13,6 @@ You can get these quite cheaply - or use a second Arduino to do this.
 
 This code is Licensed under the MIT license.
 
+(c) 2022-2023 Rob Probin.
+
 
