@@ -39,6 +39,9 @@ decimal
 \ If your gear ratio exceeds 65.535:1 then you need to alter the scaling below.
 \ For UK mars bot, the radius will never go beyond 65mm :-)
 
+\ ---------------------------------------------------
+
+500 constant LOOP_FREQ
 
 \ --------------------------------------------------------------------------------------
 
@@ -61,9 +64,9 @@ WHEEL_CIRCUM GEAR_RATIO ud/ ENCODER_PULSES ud/ drop dup
 
 \ Finally assign the UM/COUNT for each side.
 \ NOTICE: 2/ gives us an asymetric result, which allows us to leverage the bottom bit
+\ usually this is about 428
 ROTATION_BIAS negate 2/ + constant UM/COUNT_LEFT
 ROTATION_BIAS 2/ + constant UM/COUNT_RIGHT
-
 
 \ ---------------------
 \ DEG_PER_MM_DIFFERENCE = (180.0 / (2 * MOUSE_RADIUS * PI));
@@ -78,6 +81,6 @@ MOUSE_RADIUS PI um* 10000 ud/ drop
 
 \ UM/COUNT_LEFT . 
 \ UM/COUNT_RIGHT .
-DEG/M_DIFF . 
+\ DEG/M_DIFF . 
 
 

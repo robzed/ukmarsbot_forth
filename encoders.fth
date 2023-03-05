@@ -9,49 +9,18 @@
 -encoders
 marker -encoders
 
-\ Constants
-\ =========
-
-\ These allow you to select the forward count direction based on wiring, and orientation
-\ encoder polarity is either 1 or -1 and is used to account for reversal of the encoder phases
--1 constant ENC_LEFT_POL
- 1 constant END_RIGHT_POL
-
-\ The robot is likely to have wheels of different diameters and that must be
-\ compensated for if the robot is to reliably drive in a straight line
-0.0025 constant ROTATION_BIAS \ Negative makes robot curve to left
-
-32.0 constant WHEEL_DIA
-12.0 constant ENCODER_PULSES
-19.54 constant GEAR_RATIO
-37.0 constant MOUSE_RADIUS
-
-3.14159 constant PI
-32 constant WHEEL_DIA
-PI WHEEL_DIA * constant WHEEL_CIR
-
-
-fix these! --------------------------------------------------<<<<<<<<<<<<----------------
-1 constant MM_PER_COUNT_RIGHT
-1 constant MM_PER_COUNT_LEFT
-
-\ const float MM_PER_COUNT_LEFT = (1 - ROTATION_BIAS) * PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);
-\ const float MM_PER_COUNT_RIGHT = (1 + ROTATION_BIAS) * PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);
-\ const float DEG_PER_MM_DIFFERENCE = (180.0 / (2 * MOUSE_RADIUS * PI));
-
 \ Variables
 \ =========
 
 \ None of the variables in this file should be directly available to the rest
 \ of the code without a guard to ensure atomic access. 
 
-\ 
-variable my_distance
-variable my_angle
+2variable my_distance
+2variable my_angle
 
 \ the change in distance or angle in the last tick.
-variable fwd_change;
-variable rot_change;
+variable fwd_change
+variable rot_change
 
 \ internal use only to track encoder input edges
 variable left_count
@@ -66,6 +35,8 @@ PORTD 3 defPIN: ENC_RIGHT_CLK
 PORTD 4 defPIN: ENC_LEFT_B
 PORTD 5 defPIN: ENC_RIGHT_B
 
+??? constant EICRA
+??? constant EIMSK
 
 \ Interrupt Service routines
 \ ==========================
@@ -141,7 +112,7 @@ variable r_oldB
     \ attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_CLK), callback_left, CHANGE);
     \ attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_CLK), callback_right, CHANGE);
     di
-        %00000101 EICRA mset \ set interupt triggers (rising or falling edges)
+        %00000101 EICRA mset \ set interupt triggers (rising or falling edges = CHANGE)
         %00000011 EIMSK mset \ Enable Int0 & Int1
         ['] left_isr $0002 int! \ Int0
         ['] right_isr $0003 int! \ Int1
@@ -149,7 +120,7 @@ variable r_oldB
 ;
 
 \ this update function should be called from the periodic timer interrupt
-\ The rate should be LOOP_FREQUENCY.
+\ The rate should be LOOP_FREQ.
 \ 
 : enc_update
     right_count left_count
@@ -161,10 +132,14 @@ variable r_oldB
     ei
     ( left_count right_count )
 
-    \ calculate the change in millimeters
-    MM_PER_COUNT_RIGHT *
+    \ calculate the change in micrometers
+    \ notice: if the count is about 153, depending on the size of UM_COUNT_x
+    \ then this could overflow 16 bit.
+    \ We get about 2357 counts per meter, so at 1 m/s we get 2357 counts ... for 2ms (500Hz) 
+    \ that would be 4 or 5 counts. This seems safe to keep in a u16.
+    UM/COUNT_RIGHT *
     swap
-    MM_PER_COUNT_LEFT *
+    UM/COUNT_LEFT *
     ( right left -- )
 
     2dup
@@ -172,23 +147,23 @@ variable r_oldB
     - DEG_PER_MM_DIFFERENCE * rot_change !
 
     \ update cumulatives figures
-    fwd_change @ my_distance +!
-    rot_change @ my_angle +!
+    my_distance @ fwd_change @  m+ my_distance 2!
+    my_angle @ rot_change @ m+ my_angle 2!
 ;
 
 \ these access the variables in a safe manner
-: distance ( -- distance )
-    my_distance di @ ei
+: distance ( -- distance distance )
+    my_distance di 2@ ei
 ;
 
-: speed ( -- speed )
-    my_speed di @ ei
-    LOOP_FREQUENCY *
-;
+\ : speed ( -- speed )
+\    my_speed di @ ei
+\    LOOP_FREQ *
+\ ;
 
 : omega ( -- omega )
     rot_change di @ ei
-    LOOP_FREQUENCY *
+    LOOP_FREQ *
 ;
 
 : fwd_change@  ( -- distance )
@@ -199,7 +174,7 @@ variable r_oldB
     rot_change di @ ei
 ;
 
-: angle ( -- angle )
-    my_angle di @ ei
+: angle ( -- angle angle )
+    my_angle di 2@ ei
 ;
 
