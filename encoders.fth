@@ -6,6 +6,7 @@
 
 \ Based on  ukmars mazerunner core
 
+0encoders
 -encoders
 marker -encoders
 
@@ -35,8 +36,8 @@ PORTD 3 defPIN: ENC_RIGHT_CLK
 PORTD 4 defPIN: ENC_LEFT_B
 PORTD 5 defPIN: ENC_RIGHT_B
 
-??? constant EICRA
-??? constant EIMSK
+$69 constant EICRA
+$3d constant EIMSK
 
 \ Interrupt Service routines
 \ ==========================
@@ -98,27 +99,6 @@ variable r_oldB
     ei
 ;
 
-: enc_setup
-    0 l_oldA !
-    0 l_oldB !
-    0 r_oldA !
-    0 r_oldB !
-    ENC_LEFT_CLK input
-    ENC_LEFT_B input
-    ENC_RIGHT_CLK input
-    ENC_RIGHT_B input
-    enc_reset
-
-    \ attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_CLK), callback_left, CHANGE);
-    \ attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_CLK), callback_right, CHANGE);
-    di
-        %00000101 EICRA mset \ set interupt triggers (rising or falling edges = CHANGE)
-        %00000011 EIMSK mset \ Enable Int0 & Int1
-        ['] left_isr $0002 int! \ Int0
-        ['] right_isr $0003 int! \ Int1
-    ei
-;
-
 \ this update function should be called from the periodic timer interrupt
 \ The rate should be LOOP_FREQ.
 \ 
@@ -149,6 +129,36 @@ variable r_oldB
     \ update cumulatives figures
     my_distance @ fwd_change @  m+ my_distance 2!
     my_angle @ rot_change @ m+ my_angle 2!
+;
+
+: enc_setup
+    0 l_oldA !
+    0 l_oldB !
+    0 r_oldA !
+    0 r_oldB !
+    ENC_LEFT_CLK input
+    ENC_LEFT_B input
+    ENC_RIGHT_CLK input
+    ENC_RIGHT_B input
+    enc_reset
+
+    \ attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_CLK), callback_left, CHANGE);
+    \ attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_CLK), callback_right, CHANGE);
+    di
+        %00000101 EICRA mset \ set interupt triggers (rising or falling edges = CHANGE)
+        %00000011 EIMSK mset \ Enable Int0 & Int1
+        ['] left_isr $0002 int! \ Int0
+        ['] right_isr $0003 int! \ Int1
+     \   ['] enc_update is systick_update
+    ei
+;
+
+
+: 0encoders
+  di
+   %00000011 EIMSK mclr \ disable Int0 & Int1
+  ['] systick_dummy is systick_update
+  ei
 ;
 
 \ these access the variables in a safe manner
