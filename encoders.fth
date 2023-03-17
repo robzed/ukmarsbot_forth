@@ -115,13 +115,16 @@ variable r_oldB
     \ calculate the change in micrometers
     \ notice: if the count is about 153, depending on the size of UM_COUNT_x
     \ then this could overflow 16 bit.
-    \ We get about 2357 counts per meter, so at 1 m/s we get 2357 counts ... for 2ms (500Hz) 
+    \ We get about 2357 counts per meter, so at 1 m/s we get 2357 counts
+    \ ... for 2ms (500Hz) 
     \ that would be 4 or 5 counts. This seems safe to keep in a u16.
     UM/COUNT_RIGHT *
     swap
     UM/COUNT_LEFT *
     ( right left -- )
 
+    \ forward is sum
+    \ rotation is difference
     2dup
     + 2/ fwd_change !
     - DEG_PER_MM_DIFFERENCE * rot_change !
