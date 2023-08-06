@@ -66,16 +66,28 @@ begin-module WiFiNINA
         systick-counter <
     ;
 
+    : SPI_slave_ready ( -- ready? ) NINA_READY pin@ not ;
+
     : SPI_slave_select ( -- )
+        \ ." readyss1=" SPI_slave_ready .
         low NINA_CS pin!
-        \ wait for 5ms in case Nina is not ready yet
+        \ ." readyss2=" SPI_slave_ready .
+
+        \ wait for 5ms in case Nina is not ready for transfer
         \ timeout will be module broken/missing
         \ wait for slave ready
-        5 time_start begin dup time_expired NINA_READY pin@ or until drop
+        5 time_start 
+        begin dup time_expired SPI_slave_ready not or until 
+        \ dup time_expired ." expired=" .
+        \ ." readyss3=" SPI_slave_ready .
+        drop
     ;
 
     : SPI_wait_for_slave_ready ( -- )
-        20 time_start begin dup time_expired dup if ." WSS-T/O" then NINA_READY pin@ or until drop
+        \ ." ready1=" SPI_slave_ready .
+        1000 time_start
+        begin dup time_expired dup if ." WSS-T/O" then SPI_slave_ready or until drop
+        \ ." ready2=" SPI_slave_ready .
     ;
 
     : SPI_setup ( -- )
@@ -131,7 +143,7 @@ begin-module WiFiNINA
     ;
 
     : SPI_send ( byte -- )
-        dup ." send(" hex . decimal ." ) "
+        \ dup ." send(" hex . decimal ." ) "
         1 >spi 1 spi> drop 
         \ ." rx_got(" hex . decimal ." ) "
     ;
@@ -139,7 +151,7 @@ begin-module WiFiNINA
     : SPI_read_8 ( -- u8 )
         \ FF is dummy data
         $FF 1 >spi 1 spi>
-        dup ." got(" hex . decimal ." ) "
+        \ dup ." got(" hex . decimal ." ) "
     ; 
 
     : SPI_read_be16 ( -- u16 )
