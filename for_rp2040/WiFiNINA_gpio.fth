@@ -22,6 +22,7 @@
 \ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 \ SOFTWARE.
 
+decimal 
 begin-module WiFiNINA
     begin-module WiFiNINA-spi
     
@@ -42,8 +43,10 @@ begin-module WiFiNINA
 
     spi import
     pin import
-    systicks import
+    systick import
 
+    \ pin defs for Nina on NanoRP2040 Connect
+    \ https://github.com/arduino/ArduinoCore-mbed/blob/24138cc4b958d633ccb813d85fa1bab8a29f9693/variants/NANO_RP2040_CONNECT/variant.cpp
     9 constant NINA_CS
     10 constant NINA_READY
     3 constant NINA_RESET
@@ -72,14 +75,14 @@ begin-module WiFiNINA
     ;
 
     : SPI_wait_for_slave_ready ( -- )
-        20 time_start begin dup time_expired NINA_READY pin@ or until drop
+        20 time_start begin dup time_expired dup if ." WSS-T/O" then NINA_READY pin@ or until drop
     ;
 
     : SPI_setup ( -- )
 
         NINA_CS output-pin \ SPI slave select
         NINA_READY input-pin
-        NINA_RESET output_pin
+        NINA_RESET output-pin
         NINA_GPIO0 output-pin
 
         high NINA_GPIO0 pin! 
@@ -100,7 +103,20 @@ begin-module WiFiNINA
         8000000 1 spi-baud!
         8 1 spi-data-size!
         \    1 ti-ss-spi
-        true false 1 motorola-spi
+        \ true false 1 motorola-spi
+        \ https://docs.arduino.cc/learn/communication/spi
+        \ Mode      Clock Polarity (CPOL)   Clock Phase (CPHA)  Output Edge     Data Capture
+        \ SPI_MODE0 0                       0                   Falling         Rising
+        \ SPI_MODE1 0                       1                   Rising          Falling
+        \ SPI_MODE2 1                       0                   Rising          Falling
+        \ SPI_MODE3 1                       1                   Falling         Rising
+
+        \ Zeptoforth: ( sph spo spi – )
+        \ Set the protocol of an SPI peripheral to Motorola SPI, with SPO/CPOL set to spo and 
+        \ SPH/CPHA set to sph. This must be done with the SPI peripheral disabled.
+        false false 1 motorola-spi        
+        \ The SPI settings for the Wifi NINA are:  8000000, MSBFIRST, SPI_MODE0
+
         1 enable-spi
 
         \ true to Spi_init_f
@@ -115,11 +131,15 @@ begin-module WiFiNINA
     ;
 
     : SPI_send ( byte -- )
+        dup ." send(" hex . decimal ." ) "
         1 >spi 1 spi> drop 
+        \ ." rx_got(" hex . decimal ." ) "
     ;
 
     : SPI_read_8 ( -- u8 )
-        0 1 >spi 1 spi>
+        \ FF is dummy data
+        $FF 1 >spi 1 spi>
+        dup ." got(" hex . decimal ." ) "
     ; 
 
     : SPI_read_be16 ( -- u16 )
@@ -127,32 +147,37 @@ begin-module WiFiNINA
         SPI_read_8 +
     ;
 
-    : SPI_check_start_cmd ( -- success )
-        \ @TODO add code
-    ;
-
-    : SPI_check_data ( data -- success )
-        \ @TODO add code
+    : SPI_wait_SPI_char ( waitChar -- success )
+        1000 time_start swap
+        begin
+            SPI_read_8 ( time waitChar newChar )
+            2dup = if drop 2drop ( ." good " ) true exit then
+            ERR_CMD = if 2drop ( ." Err " ) false exit then
+            over time_expired
+        until 2drop false
     ; 
 
-    : SPI_get_response_cmd ( params commnd -- [ n .. n+params ]  ) 
-        SPI_check_start_cmd if
-            REPLY_FLAG + SPI_check_data drop    \ ignore    @TODO check
+    : SPI_get_response_cmd ( dest-addr params command -- number_returned  ) 
+        \ hex .s decimal
+        START_CMD SPI_wait_SPI_char not if ." Not start" drop 2drop 0 exit then
 
-            \ check correct number of params
-            SPI_check_data if
-            SPI_read_8 0 ?do 
+        REPLY_FLAG + SPI_read_8 <> if ." Wrong command" cr 2drop 0 exit then 
+
+        \ check correct number of params
+        SPI_read_8 = if
+            \ now get the data
+            SPI_read_8 tuck 0 ?do 
                 \ Get Params data
-                SPI_read_be16
+                SPI_read_8 over c!
+                1+ 
                 loop
-            else
-                0 exit
-            then
-
-            END_CMD readAndCheckChar
+            drop
         else
-            drop 0  \ no version
+                ." wrong params" cr
+                drop 0 exit
         then
+
+        END_CMD SPI_read_8 <> if ." No end?" then  \ ignored @TODO check?
     ;
 
     : SPI_send_cmd ( params command -- )
@@ -160,10 +185,10 @@ begin-module WiFiNINA
         SPI_send    \ top bit should be clear (REPLY_FLAG)
         \ no total length in this packet
         dup SPI_send \ #params
-        0= if END_END SPI_send then
+        0= if END_CMD SPI_send then
     ;
 
-    : SPI_send_param (lastParam? param -- )
+    : SPI_send_param ( lastParam? param -- )
         \ Send SPI paramLen
         2 SPI_send
 
@@ -173,6 +198,21 @@ begin-module WiFiNINA
 
         if END_CMD SPI_send then
     ;
+    : SPI_send_param16 ( param -- )
+        \ Send SPI paramLen
+        2 SPI_send
+
+        \ big-endian parameter
+        dup 8 rshift SPI_send
+        $ff and SPI_send
+    ;
+    : SPI_send_param8 ( param -- )
+        \ Send SPI paramLen
+        1 SPI_send
+
+        \ big-endian parameter
+        SPI_send
+    ;
 
     end-module> import
 
@@ -180,6 +220,22 @@ begin-module WiFiNINA
     : enable_NINA ( -- )
         SPI_setup
     ; 
+
+    \ command codes
+    $50 constant SET_PIN_MODE
+    $51 constant SET_DIGITAL_WRITE
+    $52 constant SET_ANALOG_WRITE
+    $53 constant GET_DIGITAL_READ
+    $54 constant GET_ANALOG_READ
+    $37 constant GET_FW_VERSION_CMD
+
+    27 constant NinaPin_LEDR
+    25 constant NinaPin_LEDG
+    26 constant NinaPin_LEDB
+    34 constant NinaPin_A4
+    39 constant NinaPin_A5
+    36 constant NinaPin_A6
+    35 constant NinaPin_A7
 
     : toAnalogPin ( pin -- ch )
         dup 4 = if drop 6 exit then \ ch 6 on ADC1
@@ -189,27 +245,71 @@ begin-module WiFiNINA
         drop $FF
     ;
 
-    : pinMode ( pin mode -- )
+    : _send2 ( param param cmd -- )
+        SPI_wait_for_SS
+        2 swap SPI_send_cmd
+        swap    \ pin mode other way around
+        SPI_send_param8
+        SPI_send_param8
+        END_CMD SPI_send
+        \ pad to multiple of 4
+        SPI_read_8 drop
+
+        SPI_slave_deselect
     ;
+ 
+    4 buffer: TempReturnBuf    
+    : _rcv1 ( cmd -- )
+        \ Wait the reply 
+        SPI_wait_for_slave_ready
+        2 ms
+        SPI_slave_select
+        2 ms
+
+        TempReturnBuf swap 1 swap SPI_get_response_cmd
+        SPI_slave_deselect
+    ;
+
+    : pinMode ( pin mode -- )
+        swap    \ pin mode other way around
+        SET_PIN_MODE _send2
+        SET_PIN_MODE _rcv1 drop
+    ;
+
+    : PinModeINPUT ( pin -- ) 0 PinMode ; 
+    : PinModeOUTPUT ( pin -- ) 1 PinMode ; 
+    : PinModeINPUT_PULLUP ( pin -- ) 2 PinMode ; 
+    : PinModeINPUT_PULLDOWN ( pin -- ) 3 PinMode ; 
+    : PinModeOUTPUT_OPENDRAIN ( pin -- ) 4 PinMode ; 
     
     : digitalRead ( pin -- state )
+        \ @TODO
     ;
 
     : digitalWrite ( pin state -- )
         \ inverted state 0 or 1 to NINA
-        0= if then 1 else 0 then
-        
+        0= if 1 else 0 then
+        SET_DIGITAL_WRITE _send2
+        SET_DIGITAL_WRITE _rcv1 drop
     ;
 
     : analogRead ( pin -- value )
         toAnalogPin
+        \ @TODO
     ;
 
 
     : analogWrite ( pin value -- )
+        \ @TODO
+        2drop
     ;
 
-    : getFwVersion ( -- version )
+    \ firmware version string length
+    6 constant WL_FW_VER_LENGTH
+
+    WL_FW_VER_LENGTH buffer: FwVersionCStr
+
+    : getFwVersion ( -- versionstr vlen )
         SPI_wait_for_SS
         0 GET_FW_VERSION_CMD SPI_send_cmd
 
@@ -217,13 +317,32 @@ begin-module WiFiNINA
 
         \ Wait the reply elaboration
         SPI_wait_for_slave_ready
+        2 ms
         SPI_slave_select
-
-        uint8_t _dataLen = 0;
-        1 GET_FW_VERSION_CMD SPI_get_response_cmd
+        \ ." Wait reply" CR
+        2 ms
+        FwVersionCStr dup 1 GET_FW_VERSION_CMD SPI_get_response_cmd
         SPI_slave_deselect
     ;
 
-
 end-module
+
+
+\ #test items
+\ 
+\ WiFiNINA import 
+\ enable_NINA
+\ getFwVersion .s cr type cr
+\
+\ NinaPin_LEDB 1 pinMode .s
+\ NinaPin_LEDB 1 digitalWrite
+\ NinaPin_LEDB 0 digitalWrite
+\ 
+\ NinaPin_LEDG pinModeOUTPUT
+\ NinaPin_LEDG 1 digitalWrite
+\ NinaPin_LEDG 0 digitalWrite
+\ 
+\ NinaPin_LEDR pinModeOUTPUT
+\ NinaPin_LEDR 1 digitalWrite
+\ NinaPin_LEDR 0 digitalWrite
 
