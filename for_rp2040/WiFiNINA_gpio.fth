@@ -55,7 +55,7 @@ begin-module WiFiNINA
 
     \ false value SPI_init_f
 
-    : SPI_slave_deselect ( -- )
+    : SPI_NINA_deselect ( -- )
         high NINA_CS pin!
     ;
 
@@ -66,33 +66,33 @@ begin-module WiFiNINA
         systick-counter <
     ;
 
-    : SPI_slave_ready ( -- ready? ) NINA_READY pin@ not ;
+    : SPI_NINA_ready ( -- ready? ) NINA_READY pin@ not ;
 
-    : SPI_slave_select ( -- )
-        \ ." readyss1=" SPI_slave_ready .
+    : SPI_NINA_select ( -- )
+        \ ." readyss1=" SPI_NINA_ready .
         low NINA_CS pin!
-        \ ." readyss2=" SPI_slave_ready .
+        \ ." readyss2=" SPI_NINA_ready .
 
         \ wait for 5ms in case Nina is not ready for transfer
         \ timeout will be module broken/missing
-        \ wait for slave ready
+        \ wait for NINA ready
         5 time_start 
-        begin dup time_expired SPI_slave_ready not or until 
+        begin dup time_expired SPI_NINA_ready not or until 
         \ dup time_expired ." expired=" .
-        \ ." readyss3=" SPI_slave_ready .
+        \ ." readyss3=" SPI_NINA_ready .
         drop
     ;
 
-    : SPI_wait_for_slave_ready ( -- )
-        \ ." ready1=" SPI_slave_ready .
+    : SPI_wait_for_NINA_ready ( -- )
+        \ ." ready1=" SPI_NINA_ready .
         1000 time_start
-        begin dup time_expired dup if ." WSS-T/O" then SPI_slave_ready or until drop
-        \ ." ready2=" SPI_slave_ready .
+        begin dup time_expired dup if ." WSS-T/O" then SPI_NINA_ready or until drop
+        \ ." ready2=" SPI_NINA_ready .
     ;
 
     : SPI_setup ( -- )
 
-        NINA_CS output-pin \ SPI slave select
+        NINA_CS output-pin \ SPI NINA_select
         NINA_READY input-pin
         NINA_RESET output-pin
         NINA_GPIO0 output-pin
@@ -138,8 +138,8 @@ begin-module WiFiNINA
         \ SPI_init_f 0= if
         \    SpiSetup 
         \ then
-        SPI_wait_for_slave_ready
-        SPI_slave_select
+        SPI_wait_for_NINA_ready
+        SPI_NINA_select
     ;
 
     : SPI_send ( byte -- )
@@ -267,19 +267,19 @@ begin-module WiFiNINA
         \ pad to multiple of 4
         SPI_read_8 drop
 
-        SPI_slave_deselect
+        SPI_NINA_deselect
     ;
  
     4 buffer: TempReturnBuf    
     : _rcv1 ( cmd -- )
         \ Wait the reply 
-        SPI_wait_for_slave_ready
+        SPI_wait_for_NINA_ready
         2 ms
-        SPI_slave_select
+        SPI_NINA_select
         2 ms
 
         TempReturnBuf swap 1 swap SPI_get_response_cmd
-        SPI_slave_deselect
+        SPI_NINA_deselect
     ;
 
     : pinMode ( pin mode -- )
@@ -325,16 +325,17 @@ begin-module WiFiNINA
         SPI_wait_for_SS
         0 GET_FW_VERSION_CMD SPI_send_cmd
 
-        SPI_slave_deselect
+        SPI_NINA_deselect
+
 
         \ Wait the reply elaboration
-        SPI_wait_for_slave_ready
+        SPI_wait_for_NINA_ready
         2 ms
-        SPI_slave_select
+        SPI_NINA_select
         \ ." Wait reply" CR
         2 ms
         FwVersionCStr dup 1 GET_FW_VERSION_CMD SPI_get_response_cmd
-        SPI_slave_deselect
+        SPI_NINA_deselect
     ;
 
 end-module
