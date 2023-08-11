@@ -15,6 +15,7 @@
 : fswap [inlined] 2swap ;
 : f! [inlined] 2! ;
 : f@ [inlined] 2@ ;
+: fvalue 2value ;
 
 : ei [inlined] enable-int ;
 : di [inlined] disable-int ;
