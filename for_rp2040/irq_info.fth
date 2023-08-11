@@ -1,3 +1,8 @@
+\ Visualise RP2040 Interrupts
+\ (c) 2022 Rob Probin 
+\ MIT License, see LICENSE file
+\ 
+
 interrupt import
 decimal
 .s
@@ -36,9 +41,9 @@ decimal
 cr ."         " $10 0 do SPACE SPACE loop $10 0 do 1 . loop 
 cr ."         " hex $10 0 do I . loop $10 0 do I . loop decimal
 cr ." pending" NVIC_ISPR_Base @  .bitpos 
-\ cr ." pending" NVIC_ICPR_Base @ .bitpos
+\ cr ." pending" NVIC_ICPR_Base @ .bitpos   \ same results as reading NVIC_ISPR
 cr ." enabled" NVIC_ISER_Base @  .bitpos
-\ cr ." enabled" NVIC_ICER_Base @  .bitpos
+\ cr ." enabled" NVIC_ICER_Base @  .bitpos  \ same results as reading NVIC_ISER
 
 cr
 cr ." 1=Low Level, 2=High Level, 4=Edge Low, 8=Edge High"
