@@ -9,6 +9,10 @@
 \ -config
 \ marker -config
 
+\ @TODO: Should these be constants? Maybe we should be able to adjust these from the Forth console?
+\        Could use values instead of varaibles.
+\        For Zeptoforth see https://github.com/tabemann/zeptoforth/wiki/VALUEs-and-Lexically-Scoped-Local-Variables
+
 decimal 
 
 \ The constants here aim to have Robot natural units - seconds, millimeters, etc. for ease of use.
@@ -37,7 +41,7 @@ decimal
 \ Negative makes robot curve to left
 0,0025 fconstant ROTATION_BIAS
 
-\ these are in micrometers = µm
+\ these are in millimeters = mm
 32,0 fconstant WHEEL_DIA    \ mm, adjust on test
 12,0 fconstant ENCODER_PULSES \ per motor rev
 19,540 fconstant GEAR_RATIO
@@ -78,5 +82,10 @@ WHEEL_CIRCUM PULSES/REV f/ fconstant BASIC_mm/count
 \ mm/COUNT_LEFT . 
 \ mm/COUNT_RIGHT .
 \ DEG/mm_DIFFERENCE . 
+
+\ recalculate calculated values
+: recalc-const
+
+;
 
 
