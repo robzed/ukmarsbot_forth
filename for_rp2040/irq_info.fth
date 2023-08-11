@@ -31,7 +31,7 @@ decimal
 
 : .bitpos ( data -- )
     32 0 do
-        dup 1 rshift swap if ."  1" else ."  _" then
+        dup 1 rshift swap 1 and if ."  1" else ."  _" then
     loop
     drop
 ;
@@ -44,7 +44,8 @@ cr ." pending" NVIC_ISPR_Base @  .bitpos
 \ cr ." pending" NVIC_ICPR_Base @ .bitpos   \ same results as reading NVIC_ISPR
 cr ." enabled" NVIC_ISER_Base @  .bitpos
 \ cr ." enabled" NVIC_ICER_Base @  .bitpos  \ same results as reading NVIC_ISER
-
+cr ." NMI proc0 " $40004000 @ .L
+cr ." NMI proc1 " $40004004 @ .L
 cr
 cr ." 1=Low Level, 2=High Level, 4=Edge Low, 8=Edge High"
 cr ." INTR07-00 " $400140f0 @ .L \ .bitpos8
