@@ -51,7 +51,7 @@ begin-module WiFiNINA
     10 constant NINA_READY
     3 constant NINA_RESET
     2 constant NINA_GPIO0   \ same as NINA_IRQ
-    2 constant NINA_IRQ     \ same as NINA_QPIO0
+    2 constant NINA_IRQ     \ same as NINA_GPIO0
 
     \ false value SPI_init_f
 
@@ -269,6 +269,21 @@ begin-module WiFiNINA
 
         SPI_NINA_deselect
     ;
+
+    : _send1 ( param cmd -- )
+        SPI_wait_for_SS
+        1 swap SPI_send_cmd
+        SPI_send_param8
+        END_CMD SPI_send
+
+        \ pad to multiple of 4
+        SPI_read_8 drop
+        SPI_read_8 drop
+
+        SPI_NINA_deselect
+ 
+    ; 
+
  
     4 buffer: TempReturnBuf    
     : _rcv1 ( cmd -- )
@@ -281,6 +296,7 @@ begin-module WiFiNINA
         TempReturnBuf swap 1 swap SPI_get_response_cmd
         SPI_NINA_deselect
     ;
+
 
     : pinMode ( pin mode -- )
         swap    \ pin mode other way around
@@ -307,7 +323,14 @@ begin-module WiFiNINA
 
     : analogRead ( pin -- value )
         toAnalogPin
-        \ @TODO
+        GET_ANALOG_READ _send1
+        GET_ANALOG_READ _rcv1
+        2 = IF
+            TempReturnBuf h@
+        ELSE
+            cr ." Unexpected return" cr
+            0
+        THEN
     ;
 
 
