@@ -286,14 +286,14 @@ begin-module WiFiNINA
 
  
     4 buffer: TempReturnBuf    
-    : _rcv1 ( cmd -- )
+    : _rcv ( ret-addr expected-ret-values cmd -- )
         \ Wait the reply 
         SPI_wait_for_NINA_ready
         2 ms
         SPI_NINA_select
         2 ms
 
-        TempReturnBuf swap 1 swap SPI_get_response_cmd
+        SPI_get_response_cmd
         SPI_NINA_deselect
     ;
 
@@ -301,7 +301,7 @@ begin-module WiFiNINA
     : pinMode ( pin mode -- )
         swap    \ pin mode other way around
         SET_PIN_MODE _send2
-        SET_PIN_MODE _rcv1 drop
+        TempReturnBuf 1 SET_PIN_MODE _rcv drop
     ;
 
     : PinModeINPUT ( pin -- ) 0 PinMode ; 
@@ -318,13 +318,13 @@ begin-module WiFiNINA
         \ inverted state 0 or 1 to NINA
         0= if 1 else 0 then
         SET_DIGITAL_WRITE _send2
-        SET_DIGITAL_WRITE _rcv1 drop
+        TempReturnBuf 1 SET_DIGITAL_WRITE _rcv drop
     ;
 
     : analogRead ( pin -- value )
         toAnalogPin
         GET_ANALOG_READ _send1
-        GET_ANALOG_READ _rcv1
+         TempReturnBuf 1 GET_ANALOG_READ _rcv
         2 = IF
             TempReturnBuf h@
         ELSE
@@ -334,9 +334,9 @@ begin-module WiFiNINA
     ;
 
 
-    : analogWrite ( pin value -- )
-        \ @TODO
-        2drop
+    : analogWrite ( pin value0-255 -- )
+        SET_ANALOG_WRITE _send2
+         TempReturnBuf 1 SET_ANALOG_WRITE _rcv drop
     ;
 
     \ firmware version string length
@@ -381,4 +381,22 @@ end-module
 \ NinaPin_LEDR pinModeOUTPUT
 \ NinaPin_LEDR 1 digitalWrite
 \ NinaPin_LEDR 0 digitalWrite
+
+\ 4 analogRead .
+\ 5 analogRead . 
+\ 6 analogRead .
+\ 7 analogRead .
+
+\ NinaPin_LEDB 0 analogWrite
+\ NinaPin_LEDB 128 analogWrite
+\ NinaPin_LEDB 255 analogWrite
+
+\ NinaPin_LEDR 0 analogWrite
+\ NinaPin_LEDR 128 analogWrite
+\ NinaPin_LEDR 255 analogWrite
+
+\ NinaPin_LEDG 0 analogWrite
+\ NinaPin_LEDG 128 analogWrite
+\ NinaPin_LEDG 255 analogWrite
+
 
