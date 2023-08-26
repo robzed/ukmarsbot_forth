@@ -311,7 +311,10 @@ begin-module WiFiNINA
     : PinModeOUTPUT_OPENDRAIN ( pin -- ) 4 PinMode ; 
     
     : digitalRead ( pin -- state )
-        \ @TODO
+        \ NOTE: I haven't tested this!
+        GET_DIGITAL_READ _send1
+         TempReturnBuf 1 GET_DIGITAL_READ _rcv
+         TempReturnBuf c@ 0<>
     ;
 
     : digitalWrite ( pin state -- )
@@ -381,6 +384,8 @@ end-module
 \ NinaPin_LEDR pinModeOUTPUT
 \ NinaPin_LEDR 1 digitalWrite
 \ NinaPin_LEDR 0 digitalWrite
+
+\ NinaPin_LEDR digitalRead .
 
 \ 4 analogRead .
 \ 5 analogRead . 
