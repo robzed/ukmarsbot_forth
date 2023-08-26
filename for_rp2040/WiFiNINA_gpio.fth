@@ -222,7 +222,6 @@ begin-module WiFiNINA
         \ Send SPI paramLen
         1 SPI_send
 
-        \ big-endian parameter
         SPI_send
     ;
 
@@ -289,9 +288,7 @@ begin-module WiFiNINA
     : _rcv ( ret-addr expected-ret-values cmd -- )
         \ Wait the reply 
         SPI_wait_for_NINA_ready
-        2 ms
         SPI_NINA_select
-        2 ms
 
         SPI_get_response_cmd
         SPI_NINA_deselect
@@ -356,10 +353,8 @@ begin-module WiFiNINA
 
         \ Wait the reply elaboration
         SPI_wait_for_NINA_ready
-        2 ms
         SPI_NINA_select
         \ ." Wait reply" CR
-        2 ms
         FwVersionCStr dup 1 GET_FW_VERSION_CMD SPI_get_response_cmd
         SPI_NINA_deselect
     ;
