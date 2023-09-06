@@ -47,12 +47,16 @@
 begin-module ABC-decoder
     begin-module ABC-internals
 
+    12 constant notes_per_octive
     variable song_str
     variable song_len
     variable note_n
-    variable note_modifier
+    variable note_modifier  \ they become accidentials for the rest of the bar
+    variable note_modifier_set
     variable note_len
-    variable note_accidentals
+    variable note_fraction
+    notes_per_octive cells buffer: note_accidentals
+
 
     \ Piano key frequencies
     create piano_key_freq
@@ -100,178 +104,165 @@ begin-module ABC-decoder
     then
 ;
 
-\ local note_table = { 
-\     C = 0, -- middle C
-\     D = 2,
-\     E = 4,
-\     F = 5,
-\    G = 7,
-\    A = 9,
-\    B = 11,
-\
-\    c = 12,
-\    d = 14,
-\    e = 16,
-\    f = 17,
-\    g = 19,
-\    a = 21,
-\    b = 23,
-\ }
+create local_note_table
+     9 , \ A above middle C
+    11 , \ B above middle C
+     0 , \ middle C
+     2 , \ D
+     4 , \ E
+     5 , \ F
+     7 , \ G
 
-: do_note (  c -- )
-\    local note = note_table[c]
-\    if note then
-\        local mod = music._flags.current_note_modifier
-\        if mod then
-\            music._flags.current_note_modifier = nil
-\            music._flags.note_accidentals[note] = mod
-\        else
-\            mod = music._flags.note_accidentals[note]
-\            if not mod then
-\                mod = 0
-\            end
-\        end
-\        note = note + mod
-\        table.insert(music.songnote, note)
-\        table.insert(music.songlen, 1)
-\    end
+\     C = 0  = middle C
+\    D = 2
+\    E = 4
+\    F = 5
+\    G = 7
+\    A = 9
+\    B = 11
+\
+\    c = 12
+\    d = 14
+\    e = 16
+\    f = 17
+\    g = 19
+\    a = 21
+\    b = 23
+
+
+: decode_note ( c -- n )
+    \ assume ascii
+    dup [CHAR] a >= if
+        12
+    else
+        0
+    then
+    swap ( -- octive c )
+    to-upper-char
+    [CHAR] A - cells local_note_table + @
+    +   \ add on lower case offset next octive
 ;
 
+: process_accidentials ( note -- modifier )
+    \ remove the octive offset, if there is one
+    dup notes_per_octive >= if
+        notes_per_octive -
+    then
+    cells note_accidentals +     ( note-one-octive -- note_accidenials_address )
+
+    \ now check if are are writing a new note modifier, or we 
+    note_modifier_set @ if
+        note_modifier @ swap !
+        note_modifier @
+    else
+        \ get the existing note accidential
+        @
+    then
+;
+
+: do_note (  c -- )
+    dup .
+    decode_note
+    dup .
+
+    \ sort out note modifier first
+    dup process_accidentials
+
+    dup .
+
+    \ note + modifier becomes the note
+    + note_n !
+;
+
+99999 constant rest_note
+
 : do_down_1_octive ( -- )
-    -12 note_n +!
+    note_n @ rest_note <> if
+        -12 note_n +!
+    then
 ;
 
 : do_up_2_octives ( -- )
-    24 note_n +!
+    note_n @ rest_note <> if
+        24 note_n +!
+    then
 ;
 
 : do_sharp ( -- )
     1 note_modifier +!
+    true note_modifier_set !
 ;
 
 : do_natural ( -- )
     0 note_modifier !
+    true note_modifier_set !
 ;
 
 : do_flat ( -- )
     -1 note_modifier +!
+    true note_modifier_set !
 ;
 
 : do_rest ( -- )
-        \ table.insert(music.songnote, nil)
-        \ table.insert(music.songlen, 1)
+    rest_note note_n !
 ;
 
 : do_number ( c -- )
-    \ if c == "/" then
-    \     m._flags.fraction = true
-    \ elseif m._flags.in_number then
-    \     m._flags.in_number = m._flags.in_number * 10 + string.byte(c) - string.byte("0")
-    \ else
-    \    m._flags.in_number = string.byte(c) - string.byte("0")
-    \ end
+    dup [CHAR] / = if
+        drop
+        true note_fraction !
+    else
+        [char] 0 -
+        note_len @ 10 * 
+        +
+        note_len !
+    then
 ;
 
 : do_barline ( c -- )
     \ applies to this measure(=bar) only
-    0 note_accidentals !
+    notes_per_octive 0 do
+        0 note_accidentals I cells + !
+    loop
 ;
 
 
-0 value decode_char_table_addr \ represents from 32 to 127, i.e. 96 characters
-: >decode_char_table ( char xt -- )
-    swap BL - CELLS decode_char_table_addr !
-;
-: create_decode_char_table
-    [CHAR] C do_note >decode_char_table
-    [CHAR] D do_note >decode_char_table
-    [CHAR] E do_note >decode_char_table
-    [CHAR] F do_note >decode_char_table
-    [CHAR] G do_note >decode_char_table
-    [CHAR] A do_note >decode_char_table
-    [CHAR] B do_note >decode_char_table
-    [CHAR] c do_note >decode_char_table
-    [CHAR] d do_note >decode_char_table
-    [CHAR] e do_note >decode_char_table
-    [CHAR] f do_note >decode_char_table
-    [CHAR] g do_note >decode_char_table
-    [CHAR] a do_note >decode_char_table
-    [CHAR] b do_note >decode_char_table
-    [CHAR] , do_down_1_octive >decode_char_table
-    [CHAR] ' do_up_2_octives >decode_char_table
-    [CHAR] ^ do_sharp >decode_char_table
-    [CHAR] = do_natural >decode_char_table
-    [CHAR] _ do_flat >decode_char_table
-    [CHAR] z do_rest >decode_char_table
-    [CHAR] 0 do_number >decode_char_table
-    [CHAR] 1 do_number >decode_char_table
-    [CHAR] 2 do_number >decode_char_table
-    [CHAR] 3 do_number >decode_char_table
-    [CHAR] 4 do_number >decode_char_table
-    [CHAR] 5 do_number >decode_char_table
-    [CHAR] 6 do_number >decode_char_table
-    [CHAR] 7 do_number >decode_char_table
-    [CHAR] 8 do_number >decode_char_table
-    [CHAR] 9 do_number >decode_char_table
-    [CHAR] / do_number >decode_char_table
-\     BL  do_note >decode_char_table
-    [CHAR] | do_barline >decode_char_table
-;
-: init_decode_char_table
-\     decode_char_table_addr 0= if
-\         \ allocate some buffer
-\        xxx to decode_char_table_addr
-\         decode_char_table_addr 128 BL - cells 0 fill
-\        create_decode_char_table
-\     then
-;
-: decode_char ( c -- xt )
-    CELLS decode_char_table_addr + @
+: finish_number ( -- float )
+    note_fraction @ if
+        note_len @ 0 = if
+            \ '/' is same as /2
+            0,5
+        else
+            1,0 note_len @ s>f f/
+        then
+    else
+        note_len @ 0 = if
+            1,0
+        else
+            note_len @ s>f
+        then
+    then
 ;
 
-
-: finish_number ( -- )
-\    local len = #m.songlen
-\    if len == 0 then    -- mistake in notaton
-\        return
-\    end
-\    local num = m._flags.in_number
-\    if num then
-\        if m._flags.fraction then
-\            num = 1 / num
-\        end
-\        m.songlen[len] = num
-\    elseif m._flags.fraction then
-\        m.songlen[len] = 0.5   -- same as /2
-\    end
-\    
-\    m._flags.fraction = nil
-\    m._flags.in_number = nil
+: new_note ( -- )
+    0 note_modifier !
+    false note_modifier_set !
+    false note_fraction !
+    rest_note note_n !
+    0 note_len !
 ;
 
 
 : ABC_decoder ( music_string music_len -- ) 
     song_len !
     song_str !
-    0 note_modifier !
-    1 note_len !
-    0 note_n !
-    0 note_accidentals !
 
-    song_len @ 0 do
-        song_str c@ dup decode_char
-        dup if
-            dup do_number <> if
-                finish_number
-            then
-            execute ( c xt -- )
-        else
-            2drop \ otherwise ignore
-        then
-        1+ song_str +!
+    new_note
+
+    notes_per_octive 0 do
+        0 note_accidentals I cells + !
     loop
 
-    finish_number
 ;
 
 : ABC_next ( -- c | -1 )
@@ -280,7 +271,7 @@ begin-module ABC-decoder
         -1
     else 
         -1 song_len +!
-        song_str C@
+        song_str @ C@
         1 song_str +!
     then
 ;
@@ -317,8 +308,8 @@ begin-module ABC-decoder
         else
             r>
         then
-    again
-    nip nip false
+    repeat
+    drop 2drop false
 ;
 
 : ABC_back_one
@@ -326,7 +317,7 @@ begin-module ABC-decoder
     -1 song_str +!
 ;
 
-
+\ note breaks if length of ABC string is zero due to ABC_back_one
 : one_of ( str len -- false | char true )
     
     ABC_skip_spaces 
@@ -347,6 +338,7 @@ begin-module ABC-decoder
     \ we don't support this yet
     \ "Gm7"
 ;
+
 : fiddle-bowing
     \ we don't support these yet
     \ u (up-bow) and v (down-bow)
@@ -356,6 +348,7 @@ begin-module ABC-decoder
     \ we don't support these yet
     \ e.g. staccato .
 ;
+
 : accidental ( -- )
     \ _ __ ^ ^^ =
     \ __A _A =A ^A ^^A   (Applies to that note to the end of the measure)
@@ -378,19 +371,20 @@ begin-module ABC-decoder
         drop
     repeat
 ;
-: base-note
+: base-note ( -- flag ) 
     \ CDEFGABcdefgab 
     \ but also rest
     \ z
-    begin
-        S" CDEFGABcdefgabz" one_of
-    while
+    S" CDEFGABcdefgabz" one_of if
         dup [CHAR] z = if
             drop do_rest 
         else
             do_note
         then
-    repeat
+        true
+    else
+        false
+    then
 ;
 
 : octave
@@ -422,17 +416,36 @@ begin-module ABC-decoder
 
 : barlines
     \ pipe symbol |
-    \ don't have an effect on the music
-    one_of S" |" if drop then
+    \ don't have an effect on the music, except to cancel accidentals
+    S" |" one_of if drop do_barline then
 ;
 
 
-: get_note ( -- false | nDuration Ffreq true )
+: get_note ( -- false | float-Duration float-freq true )
+    new_note
     barlines 
-    guitar-chords fiddle-bowing accents accidental base-note octave note-length
+    guitar-chords fiddle-bowing accents accidental
+    base-note false = if
+        false exit
+    then
+    octave note-length
     finish_number
+    note_n @ rest_note = if
+        0,0
+    else
+        note_n @ note_to_freq
+    then
+
+    true
 ;
 
+: ABC_play ( -- )
+    begin
+        get_note
+    while
+        ." dur=" f. ." freq=" f. cr
+    repeat
+;
 
 : ABC_test ( -- )
   \ for testing - Notice the accident holds in a bar
@@ -441,12 +454,7 @@ begin-module ABC-decoder
   S" | GFGF E2C2 | z2 EF GFGF  | EFGA _BABA | G2 z6 | _A2G2 _G2F2 | _EDCD E2z2 | _EDCD E2C2 | G2 z6 |"
  
   ABC_decoder
-  begin
-    dup @ 0<>
-  while
-    dup @
-    CELL+
-  repeat
+  \ ABC_play
 ;
 
 
