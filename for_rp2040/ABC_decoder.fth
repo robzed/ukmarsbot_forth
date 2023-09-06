@@ -161,14 +161,11 @@ create local_note_table
 ;
 
 : do_note (  c -- )
-    dup .
     decode_note
-    dup .
 
     \ sort out note modifier first
     dup process_accidentials
 
-    dup .
 
     \ note + modifier becomes the note
     + note_n !
@@ -439,12 +436,44 @@ create local_note_table
     true
 ;
 
-: ABC_play ( -- )
+variable current_volume
+2variable current_ms_per_note
+
+: note_len>ms ( float-dur -- )
+    current_ms_per_note 2@ 2swap f* f>s
+;
+
+: ABC_make_note ( float-dur float-freq -- )
+    \ uses current_volume and current freq
+    2dup 0,0 d<> if
+        tone_on
+    else
+        2drop tone_off
+    then
+    note_len>ms  ms
+    tone_off
+;
+
+
+\ accepts zero for the two parameters and uses defaults
+: ABC_play_once ( tempo_bpm volume -- )
+
+    \ default volume
+    dup 0= if drop 248 then
+    current_volume !
+
+    \ default BPM
+    dup 0= if drop 120 then
+    s>f 60000,0 2swap f/ 2dup
+    current_ms_per_note 2!
+
     begin
         get_note
     while
-        ." dur=" f. ." freq=" f. cr
+        \ ." dur=" f. ." freq=" f. cr
+        ABC_make_note
     repeat
+    tone_off
 ;
 
 : ABC_test ( -- )
@@ -454,7 +483,7 @@ create local_note_table
   S" | GFGF E2C2 | z2 EF GFGF  | EFGA _BABA | G2 z6 | _A2G2 _G2F2 | _EDCD E2z2 | _EDCD E2C2 | G2 z6 |"
  
   ABC_decoder
-  \ ABC_play
+  370 0 ABC_play_once
 ;
 
 
