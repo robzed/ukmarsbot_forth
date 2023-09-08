@@ -256,10 +256,12 @@ begin-module WiFiNINA
         drop $FF
     ;
 
-    : _send2 ( param param cmd -- )
+    : _send2 ( param1 param2 cmd -- )
+        \ notice param1 is sent before param2 ... 
+        \ this makes the caller look like the Arduino function order
         SPI_wait_for_SS
         2 swap SPI_send_cmd
-        swap    \ pin mode other way around
+        swap    \ send the deeper parameter first
         SPI_send_param8
         SPI_send_param8
         END_CMD SPI_send
@@ -296,7 +298,6 @@ begin-module WiFiNINA
 
 
     : pinMode ( pin mode -- )
-        swap    \ pin mode other way around
         SET_PIN_MODE _send2
         TempReturnBuf 1 SET_PIN_MODE _rcv drop
     ;
