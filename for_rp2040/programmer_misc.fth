@@ -19,5 +19,7 @@
   cr
 ;
 
-' my-prompt prompt-hook !
+: prompt2 ' my-prompt prompt-hook ! ;
+
+prompt2
 
