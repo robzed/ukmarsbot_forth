@@ -5,7 +5,8 @@
 
 interrupt import
 decimal
-.s
+
+\ these should probably be moved to programmer_misc.fth
 : .HEX ( n cnt -- ) HEX  <# 0 DO # LOOP #> TYPE DECIMAL ;
 : .B 0 2 .HEX ;
 : .H 0 4 .HEX ;
@@ -38,8 +39,8 @@ decimal
 
 
 : irq_status
-cr ."         " $10 0 do SPACE SPACE loop $10 0 do 1 . loop 
-cr ."         " hex $10 0 do I . loop $10 0 do I . loop decimal
+cr ."         " #10 0 do SPACE SPACE loop #22 0 do I #10 / 1+ . loop 
+cr ."         " #32 0 do I #10 MOD . loop
 cr ." pending" NVIC_ISPR_Base @  .bitpos 
 \ cr ." pending" NVIC_ICPR_Base @ .bitpos   \ same results as reading NVIC_ISPR
 cr ." enabled" NVIC_ISER_Base @  .bitpos
