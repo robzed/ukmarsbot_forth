@@ -56,6 +56,7 @@ begin-module ABC-decoder
     variable note_len
     variable note_fraction
     notes_per_octive cells buffer: note_accidentals
+    notes_per_octive cells buffer: key_accidentials
 
 
     \ Piano key frequencies
@@ -143,11 +144,15 @@ create local_note_table
     +   \ add on lower case offset next octive
 ;
 
-: process_accidentials ( note -- modifier )
-    \ remove the octive offset, if there is one
+: remove_octive_offset ( n -- n )
     dup notes_per_octive >= if
         notes_per_octive -
     then
+;
+
+: process_accidentials ( note -- modifier )
+    \ remove the octive offset, if there is one
+    remove_octive_offset
     cells note_accidentals +     ( note-one-octive -- note_accidenials_address )
 
     \ now check if are are writing a new note modifier, or we 
@@ -216,10 +221,12 @@ create local_note_table
     then
 ;
 
-: do_barline ( c -- )
+: do_barline ( -- )
     \ applies to this measure(=bar) only
     notes_per_octive 0 do
-        0 note_accidentals I cells + !
+        \ copy from key accidentials to note accedentials
+        key_accidentials I cells + @
+        note_accidentals I cells + !
     loop
 ;
 
@@ -249,6 +256,12 @@ create local_note_table
     0 note_len !
 ;
 
+: clear_key ( -- )
+\ this effectively sets C major, A minor
+    notes_per_octive 0 do
+        0 key_accidentials I cells + !
+    loop
+;
 
 : ABC_decoder ( music_string music_len -- ) 
     song_len !
@@ -256,11 +269,37 @@ create local_note_table
 
     new_note
 
-    notes_per_octive 0 do
-        0 note_accidentals I cells + !
-    loop
-
+    clear_key       \ set C major
+    do_barline
 ;
+
+: key-sharp ( c -- )
+    decode_note remove_octive_offset
+    cells key_accidentials +
+    1 swap !
+;
+: key-flat ( c -- )
+    decode_note remove_octive_offset
+    cells key_accidentials + 
+    -1 swap !
+;
+
+
+: a_minor_key ( -- )
+    clear_key
+    do_barline
+;
+: c_major_key ( -- )
+    clear_key
+    do_barline
+;
+: b_minor_key ( -- )
+    clear_key
+    [char] F key-sharp
+    [char] C key-sharp
+    do_barline
+;
+
 
 : ABC_next ( -- c | -1 )
     \ return 0 if no more
