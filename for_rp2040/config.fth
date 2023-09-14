@@ -9,9 +9,8 @@
 \ -config
 \ marker -config
 
-\ @TODO: Should these be constants? Maybe we should be able to adjust these from the Forth console?
-\        Could use values instead of varaibles.
-\        For Zeptoforth see https://github.com/tabemann/zeptoforth/wiki/VALUEs-and-Lexically-Scoped-Local-Variables
+\ These are values rather than constants so they can be adjusted these from the Forth console.
+\ For Zeptoforth see https://github.com/tabemann/zeptoforth/wiki/VALUEs-and-Lexically-Scoped-Local-Variables
 
 decimal 
 
@@ -52,32 +51,39 @@ decimal
 \ General Constants
 
 500,0 fconstant LOOP_FREQ
-3,14159 fconstant PI
+\ not required for zeptoforth
+\ 3,1415926499 fconstant PI
 
-\ --------------------------------------------------------------------------------------
+\ General Calculated values to 'Constants' (actually reconfigurable)
+\ Includes formulas for 'constants'
+\ =================================================================
 
-\ General Calculated values from Constants
-\ ========================================
+: calc_wheel_circum ( -- f ) WHEEL_DIA PI f* ; 
+calc_wheel_circum   fvalue WHEEL_CIRCUM  \ mm
 
-WHEEL_DIA PI f* fvalue WHEEL_CIRCUM  \ mm
-ENCODER_PULSES GEAR_RATIO f* fvalue PULSES/REV
+: calc_pulses/rev ( -- f ) ENCODER_PULSES GEAR_RATIO f* ;
+calc_pulses/rev     fvalue PULSES/REV
+
+\ this the basic mm per pulse value
+: calc_mm/count ( -- f ) WHEEL_CIRCUM PULSES/REV f/ ;
+calc_mm/count       fvalue BASIC_mm/count
 
 \ MM_PER_COUNT_LEFT = (1 - ROTATION_BIAS) * PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);
 \ MM_PER_COUNT_RIGHT = (1 + ROTATION_BIAS) * PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);
 
-\ this the basic mm per pulse value
-WHEEL_CIRCUM PULSES/REV f/ fvalue BASIC_mm/count
-
-\ Finally assign the mm/COUNT for each side.
+\ Finally the mm/COUNT for each side.
 \ NOTICE: 2/ gives us an asymetric result, which allows us to leverage the bottom bit
 \ usually this is about 428
-1,0 ROTATION_BIAS f- BASIC_mm/count f* fvalue mm/COUNT_LEFT
-1,0 ROTATION_BIAS f+ BASIC_mm/count f* fvalue mm/COUNT_RIGHT
+: calc_mm/count_left ( -- f ) 1,0 ROTATION_BIAS f- BASIC_mm/count f* ;
+calc_mm/count_left  fvalue mm/COUNT_LEFT
 
-\ ---------------------
+: calc_mm/count_right ( -- f ) 1,0 ROTATION_BIAS f+ BASIC_mm/count f* ;
+calc_mm/count_right fvalue mm/COUNT_RIGHT
+
 \ DEG_PER_MM_DIFFERENCE = (180.0 / (2 * MOUSE_RADIUS * PI));
 
-180,0 2,0 f/ WHEEL_CIRCUM f/ fvalue DEG/mm_DIFFERENCE
+: calc_deg/mm_diff ( -- f ) 180,0 2,0 f/ WHEEL_CIRCUM f/ ; 
+calc_deg/mm_diff    fvalue DEG/mm_DIFFERENCE
 
 \
 \ recalculate calculated values
@@ -86,16 +92,12 @@ WHEEL_CIRCUM PULSES/REV f/ fvalue BASIC_mm/count
     \ 
     \ notice the calculations should be the same as above
     \ 
-    WHEEL_DIA PI f* to WHEEL_CIRCUM  \ mm
-    ENCODER_PULSES GEAR_RATIO f* to PULSES/REV
-    WHEEL_CIRCUM PULSES/REV f/ to BASIC_mm/count
-    1,0 ROTATION_BIAS f- BASIC_mm/count f* to mm/COUNT_LEFT
-    1,0 ROTATION_BIAS f+ BASIC_mm/count f* to mm/COUNT_RIGHT
-
-    \ ---------------------
-    \ DEG_PER_MM_DIFFERENCE = (180.0 / (2 * MOUSE_RADIUS * PI));
-
-    180,0 2,0 f/ WHEEL_CIRCUM f/ to DEG/mm_DIFFERENCE
+    calc_wheel_circum   to WHEEL_CIRCUM  \ mm
+    calc_pulses/rev     to PULSES/REV
+    calc_mm/count       to BASIC_mm/count
+    calc_mm/count_left  to mm/COUNT_LEFT
+    calc_mm/count_right to mm/COUNT_RIGHT
+    calc_deg/mm_diff    to DEG/mm_DIFFERENCE
 ;
 
 : show-config
