@@ -5,18 +5,34 @@ ISR = Interrupt Service Routine
 
 ## Ideal Priorities
 
+NOTE RP2040 IRQ Priorities:
+ - 0 is the highest priority
+ - 3 is the lowest
+ - NMI is highest
+
+
 Higher to lower
 
-1. Encode change interrupts
+1. Encode change interrupts (NMI?)
 
-2. Robot Systick (and ADC completion) - must complete before next robot systick. Robot systick should't slip from 2 ms, and generally should not be 
+2. Robot Systick (and ADC completion) - must complete before next robot systick. Robot systick should't slip from 2 ms, and generally should not be [finished this sentence].
+
+Zeptoforth systick - Default priority 1 (could be made to 2). (Systick increments the SysTick counter and, when appropriate, schedules the PendSV)
+
+[[NOTE: "As for moving the SysTick to priority 2, that probably wouldn't break anything, but is not ideal because it would make it impossible to make interrupts that have lower priority than SysTick but higher priority than PendSV. Note that PendSV ought to have the lowest priority of all interrupts, hence why it and only it has priority 3."]]
 
 3. Serial Interrupts for main Forth terminal. (RP2040 UART0 RX/TX on pin GPIO0 & GPIO1).
-(could be above Forth systick / Robot systick.
+(could be above Forth systick / Robot systick).
 
-4. High-level robot control task
+Zeptoforth PendSV - Default Priority 3. (PendSV is where the multitasker and interrupt bottom halves live. The PendSV can be triggered independent of the SysTick (by executing pause)).
 
-5. Forth console task
+4. Task - NINA Wifi chip - ADC read, RGB LED control, Wi-Fi interaction
+
+5. High-level robot control task
+
+6. Task - Buzzer frequency
+
+7. Forth console task
 
 
 We avoid the USB version of Zeptoforth so we don't need to worry about this. 
@@ -99,4 +115,9 @@ Motor control - PWM. This does not use CPU resources, but instead the on-chip PW
 
 
 
+
+# References
+    - GPIO change interrupt https://github.com/tabemann/zeptoforth/discussions/50
+    - Set interrupt priorities https://github.com/tabemann/zeptoforth/discussions/57
+    - PWM discussion  https://github.com/tabemann/zeptoforth/discussions/56 
 
