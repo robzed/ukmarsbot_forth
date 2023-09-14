@@ -26,13 +26,6 @@
 : invaders SAUCER ZAP SAUCER 3 ZAPS SIREN ;
 
 
-\ Arduino Nano RP2040 Connect pins
-\ Analog Pins 
-  { p26,        NULL },    // A0
-  { p27,        NULL },    // A1
-  { p28,        NULL },    // A2
-  { p29,        NULL },    // A3
-};
 
 \ Key:
 \ RP2040 Pin, Arduino Pin - ukmarsbot Function when it's a Arduino Nano RP2040 Connect
@@ -92,4 +85,11 @@
   \ p10  SPI1_ACK / UART1_CTS
   \ p11  SPI1_COPI / UART1_RTS
   \ p14  SPI1_SCK
+
+\ Arduino Nano RP2040 Connect pins
+\ Analog Pins 
+\  p26, // A0
+\  p27, // A1
+\  p28  // A2
+\  p29  // A3
 
