@@ -79,8 +79,10 @@ variable right_count
 15 constant ENC_RIGHT_CLK  \ Nano D3
 16 constant ENC_LEFT_B     \ Nano D4
 17 constant ENC_RIGHT_B    \ Nano D5
+0 constant ENCODER_GPIO_PRIORITY
 
 pin import
+interrupt import
 
 \ Interrupt Service routines
 \ ==========================
@@ -138,26 +140,16 @@ variable old-io-handler
 io-irq 16 + constant io-vector
 
 
-variable lcount1
-0 lcount1 !
-variable rcount1
-0 rcount1 !
-variable xcount1
-0 xcount1 !
-
 
 : gpio-change-isr
     old-io-handler @ execute    \ chain other GPIO change interrupts, usually only default
     ENC_LEFT_CLK _PROC0_INTS_GPIO_EDGE_HIGH@ ENC_LEFT_CLK _PROC0_INTS_GPIO_EDGE_LOW@ or if
-      ( left_isr ) ENC_LEFT_CLK _INTR_GPIO_EDGE_HIGH! ENC_LEFT_CLK _INTR_GPIO_EDGE_LOW!
-      1 lcount1 +!
+      left_isr ENC_LEFT_CLK _INTR_GPIO_EDGE_HIGH! ENC_LEFT_CLK _INTR_GPIO_EDGE_LOW!
     then
     ENC_RIGHT_CLK _PROC0_INTS_GPIO_EDGE_HIGH@ ENC_RIGHT_CLK _PROC0_INTS_GPIO_EDGE_LOW@ or if
-      ( right_isr ) ENC_RIGHT_CLK _INTR_GPIO_EDGE_HIGH! ENC_RIGHT_CLK _INTR_GPIO_EDGE_LOW!
-      1 rcount1 +!
+      right_isr ENC_RIGHT_CLK _INTR_GPIO_EDGE_HIGH! ENC_RIGHT_CLK _INTR_GPIO_EDGE_LOW!
     then
 
-    1 xcount1 +!
 ;
 
 : register-my-gpio-handler ( -- )
@@ -165,6 +157,12 @@ variable xcount1
   true ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! true ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
   true ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! true ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
   ['] gpio-change-isr io-vector interrupt::vector!
+
+  \ Set our priority for the GPIO IRQ
+  ENCODER_GPIO_PRIORITY 6 lshift io-irq NVIC_IPR_IP!
+
+  \ Enable the GPIO IRQ
+  io-irq NVIC_ISER_SETENA!
 ;
 
 
@@ -211,7 +209,17 @@ variable xcount1
     my_angle @ rot_change @ f+ my_angle f!
 ;
 
+: 0encoders
+  io-irq NVIC_ICER_CLRENA!
+  false ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! false ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
+  false ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! false ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
+  old-io-handler @ io-vector interrupt::vector!
+;
+
 : enc_setup
+    \ just in case previously enabled
+    io-irq NVIC_ICER_CLRENA!
+
     0 l_oldA !
     0 l_oldB !
     0 r_oldA !
@@ -224,11 +232,6 @@ variable xcount1
     register-my-gpio-handler
 ;
 
-: 0encoders
-  false ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! false ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
-  false ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! false ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
-  old-io-handler @ io-vector interrupt::vector!
-;
 
 \ these access the variables in a safe manner
 : robot-distance ( -- distance distance )
