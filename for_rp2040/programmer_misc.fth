@@ -19,7 +19,6 @@
   cr
 ;
 
-: prompt2 ' my-prompt prompt-hook ! ;
+: debugprompt ['] my-prompt prompt-hook ! ;
 
-prompt2
 
