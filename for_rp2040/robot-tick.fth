@@ -89,6 +89,7 @@ variable robot-tick-xt
     1 simple_tick +!
 
     ( do work here )
+    enc_update
 
     \ store the longest duration
     timer::us-counter-lsb swap -
