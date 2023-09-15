@@ -2,7 +2,7 @@
 \ (c) 2022-2023 Rob Probin 
 \ MIT License, see LICENSE file
 \ 
-\ BRIEF: Main for RP2040 on Zeptoforth
+\ BRIEF: Robot tick for RP2040 on Zeptoforth
 
 \ References:
 \  - Inside Zeptoforth release: docs/words/timer.html#set-alarm
@@ -110,9 +110,7 @@ variable robot-tick-xt
     set-next-alarm
 ;
 
-: main ( -- )
-    setup-robot-tick
-;
+
 
 
 

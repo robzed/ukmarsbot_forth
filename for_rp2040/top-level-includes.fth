@@ -4,7 +4,7 @@
 \
 \ For use with zeptocom.js
 
-compile-to-flash
+\ compile-to-flash
 #include programmer_misc.fth
 #include sounds.fth
 #include ABC_decoder.fth
@@ -14,13 +14,17 @@ compile-to-flash
 #include irq_info.fth
 #include float_compatibility.fth
 #include config.fth
-\ #include WiFiNINA_gpio.fth
-compile-to-ram
+#include WiFiNINA_gpio.fth
+\ compile-to-ram
 #include encoders.fth
+#include robot-tick.fth
+#include main-rp2040.fth
 bip
-
-debugprompt
 unused
+debugprompt
+
+
+
 \ task-free
 
 
