@@ -192,21 +192,24 @@ io-irq 16 + constant io-vector
     ei
     ( left_count right_count )
 
+    \ convert to fixed point/floating point
+    s>f rot s>f fswap
+
     \ calculate the change in micrometers
-    mm/COUNT_RIGHT *
-    swap
-    mm/COUNT_LEFT *
-    ( right left -- )
+    mm/COUNT_RIGHT f*
+    fswap
+    mm/COUNT_LEFT f*
+    ( right left )
 
     \ forward is sum
     \ rotation is difference
-    2dup
-    + s>f 0,5 f/ fwd_change f!
-    - s>f DEG/mm_DIFFERENCE * rot_change f!
+    f2dup
+    f+ 0,5 f/ fwd_change f!
+    f- DEG/mm_DIFFERENCE f* rot_change f!
 
     \ update cumulatives figures
-    my_distance @ fwd_change @  f+ my_distance f!
-    my_angle @ rot_change @ f+ my_angle f!
+    my_distance f@ fwd_change f@  f+ my_distance f!
+    my_angle f@ rot_change f@ f+ my_angle f!
 ;
 
 : 0encoders
