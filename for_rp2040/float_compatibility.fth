@@ -7,15 +7,15 @@
 \ -floatcompat
 \ marker -floatcompat
 
-: fconstant [inlined] 2constant ; 
+: fconstant 2constant ; 
 : f+ [inlined] d+ ;
 : f- [inlined] d- ;
-: fvariable [inlined] 2variable ;
+: fvariable 2variable ;
 : fdup [inlined] 2dup ;
 : fswap [inlined] 2swap ;
 : f! [inlined] 2! ;
 : f@ [inlined] 2@ ;
-: fvalue [inlined] 2value ;
+: fvalue 2value ;
 : f2dup [inlineD] 4dup ;
 : ei [inlined] enable-int ;
 : di [inlined] disable-int ;
