@@ -343,7 +343,7 @@ begin-module WiFiNINA
     \ firmware version string length
     6 constant WL_FW_VER_LENGTH
 
-    WL_FW_VER_LENGTH buffer: FwVersionCStr
+    WL_FW_VER_LENGTH 4 align buffer: FwVersionCStr
 
     : getFwVersion ( -- versionstr vlen )
         SPI_wait_for_SS
