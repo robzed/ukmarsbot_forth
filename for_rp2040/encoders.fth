@@ -6,53 +6,6 @@
 
 \ Based on  ukmars mazerunner core
 
-\ 0encoders
-\ -encoders
-\ marker -encoders
-
-\ 
-\ These are fixes for the Zeptoforth routines until we get replacement fixed Zeptoforth
-\ 
-    $40014000 constant IO_BANK0_BASE
-    
-    \ GPIO processor 0 interrupt enable registers
-    IO_BANK0_BASE $100 + constant PROC0_INTE0
-    IO_BANK0_BASE $0F0 + constant INTR0
-    IO_BANK0_BASE $120 + constant PROC0_INTS0
-
-  \ Set an edge low interrupt enable for processor 0
-  : _PROC0_INTE_GPIO_EDGE_LOW! ( enable index -- )
-    dup 7 and 2 lshift 2 + bit swap 1 rshift $c and PROC0_INTE0 +
-    rot if bis! else bic! then
-  ;
-
-  \ Set an edge high interrupt enable for processor 0
-  : _PROC0_INTE_GPIO_EDGE_HIGH! ( enable index -- )
-    dup 7 and 2 lshift 3 + bit swap 1 rshift $c and PROC0_INTE0 +
-    rot if bis! else bic! then
-  ;
-
-  \ Clear a raw edge low interrupt
-  : _INTR_GPIO_EDGE_LOW! ( index -- )
-    dup 7 and 2 lshift 2 + bit swap 1 rshift $c and INTR0 + !
-  ;
-
-  \ Clear a raw edge high interrupt
-  : _INTR_GPIO_EDGE_HIGH! ( index -- )
-    dup 7 and 2 lshift 3 + bit swap 1 rshift $c and INTR0 + !
-  ;
-
-  \ Get an edge low interrupt status for processor 0
-  : _PROC0_INTS_GPIO_EDGE_LOW@ ( index -- enable )
-    dup 7 and 2 lshift 2 + bit swap 1 rshift $c and PROC0_INTS0 + bit@
-  ;
-
-  \ Get an edge high interrupt status for processor 0
-  : _PROC0_INTS_GPIO_EDGE_HIGH@ ( index -- enable )
-    dup 7 and 2 lshift 3 + bit swap 1 rshift $c and PROC0_INTS0 + bit@
-  ;
-
-
 
 \ Variables
 \ =========
@@ -143,19 +96,19 @@ io-irq 16 + constant io-vector
 
 : gpio-change-isr
     old-io-handler @ execute    \ chain other GPIO change interrupts, usually only default
-    ENC_LEFT_CLK _PROC0_INTS_GPIO_EDGE_HIGH@ ENC_LEFT_CLK _PROC0_INTS_GPIO_EDGE_LOW@ or if
-      left_isr ENC_LEFT_CLK _INTR_GPIO_EDGE_HIGH! ENC_LEFT_CLK _INTR_GPIO_EDGE_LOW!
+    ENC_LEFT_CLK PROC0_INTS_GPIO_EDGE_HIGH@ ENC_LEFT_CLK PROC0_INTS_GPIO_EDGE_LOW@ or if
+      left_isr ENC_LEFT_CLK INTR_GPIO_EDGE_HIGH! ENC_LEFT_CLK INTR_GPIO_EDGE_LOW!
     then
-    ENC_RIGHT_CLK _PROC0_INTS_GPIO_EDGE_HIGH@ ENC_RIGHT_CLK _PROC0_INTS_GPIO_EDGE_LOW@ or if
-      right_isr ENC_RIGHT_CLK _INTR_GPIO_EDGE_HIGH! ENC_RIGHT_CLK _INTR_GPIO_EDGE_LOW!
+    ENC_RIGHT_CLK PROC0_INTS_GPIO_EDGE_HIGH@ ENC_RIGHT_CLK PROC0_INTS_GPIO_EDGE_LOW@ or if
+      right_isr ENC_RIGHT_CLK INTR_GPIO_EDGE_HIGH! ENC_RIGHT_CLK INTR_GPIO_EDGE_LOW!
     then
 
 ;
 
 : register-my-gpio-handler ( -- )
   io-vector interrupt::vector@ old-io-handler !
-  true ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! true ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
-  true ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! true ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
+  true ENC_LEFT_CLK PROC0_INTE_GPIO_EDGE_HIGH! true ENC_LEFT_CLK PROC0_INTE_GPIO_EDGE_LOW!
+  true ENC_RIGHT_CLK PROC0_INTE_GPIO_EDGE_HIGH! true ENC_RIGHT_CLK PROC0_INTE_GPIO_EDGE_LOW!
   ['] gpio-change-isr io-vector interrupt::vector!
 
   \ Set our priority for the GPIO IRQ
@@ -214,8 +167,8 @@ io-irq 16 + constant io-vector
 
 : 0encoders
   io-irq NVIC_ICER_CLRENA!
-  false ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! false ENC_LEFT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
-  false ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_HIGH! false ENC_RIGHT_CLK _PROC0_INTE_GPIO_EDGE_LOW!
+  false ENC_LEFT_CLK PROC0_INTE_GPIO_EDGE_HIGH! false ENC_LEFT_CLK PROC0_INTE_GPIO_EDGE_LOW!
+  false ENC_RIGHT_CLK PROC0_INTE_GPIO_EDGE_HIGH! false ENC_RIGHT_CLK PROC0_INTE_GPIO_EDGE_LOW!
   old-io-handler @ io-vector interrupt::vector!
 ;
 
