@@ -16,7 +16,7 @@
 : f! [inlined] 2! ;
 : f@ [inlined] 2@ ;
 : fvalue 2value ;
-: f2dup [inlineD] 4dup ;
+: f2dup [inlined] 4dup ;
 : ei [inlined] enable-int ;
 : di [inlined] disable-int ;
 
