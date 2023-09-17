@@ -120,4 +120,4 @@ Motor control - PWM. This does not use CPU resources, but instead the on-chip PW
     - GPIO change interrupt https://github.com/tabemann/zeptoforth/discussions/50
     - Set interrupt priorities https://github.com/tabemann/zeptoforth/discussions/57
     - PWM discussion  https://github.com/tabemann/zeptoforth/discussions/56 
-
+    - Timer and tick periods https://github.com/tabemann/zeptoforth/discussions/49
