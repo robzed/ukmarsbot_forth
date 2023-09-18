@@ -6,6 +6,28 @@
 interrupt import
 decimal
 
+\ Set NVIC interrupt priority register field
+\ From RP2040 datasheet page 77: "These registers are only word-accessible"
+: NVIC_IPR_IP! ( priority u -- ) 
+    dup 3 and 3 lshift ( priority u bit-offet ) 
+    >R 3 invert and  ( priority cell-selector  )
+    NVIC_IPR_Base + ( prority NVIC-aligned-addr )
+    dup @ ( priority NVIC-aligned-addr contents32 )
+    $FF R@ lshift bic ( priority NVIC-aligned-addr contents32-cleared )
+    rot R> lshift or ( NVIC-algined-addr contents32-revised )
+    swap ! ;
+
+\ Get NVIC interrupt priority register field
+\ From RP2040 datasheet page 77: "These registers are only word-accessible"
+: NVIC_IPR_IP@ ( u -- priority )
+    dup 3 and 3 lshift ( u bit-offet ) 
+    >R 3 invert and  ( cell-selector  )
+    NVIC_IPR_Base + ( NVIC-aligned-addr )
+    @ ( contents32 )
+    $FF R@ lshift and ( contents32-required )
+    R> rshift
+;
+
 \ these should probably be moved to programmer_misc.fth
 : .HEX ( n cnt -- ) HEX  <# 0 DO # LOOP #> TYPE DECIMAL ;
 : .B 0 2 .HEX ;
