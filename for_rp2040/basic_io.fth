@@ -47,8 +47,8 @@
   \ p20 D8 - Right Dir
   \ p21 D9 - Left PWM
   \ p5  D10 - Right PWM
-  \ p7  D11 / SPITX - Emitter A (only used on 4 wall sensor board)
-  \ p4  D12 / SPIRX - Emitter B (used on all others)
+  \ p7  D11 / SPITX - Emitter A (only used on 4 wall sensor board and mini wide, LED on other boards)
+  \ p4  D12 / SPIRX - Emitter B (used on all)
   \ p6  D13 / SPICLK / LEDB - Buzzer
 
 \ Analog as digital
