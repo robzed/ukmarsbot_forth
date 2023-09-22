@@ -12,6 +12,9 @@ adc-internal import
 
 begin-module robot-adc-internal
 
+    \ fifo size before IRQ triggered
+    4 constant ROBOT_ADC_#FIFO
+    
     \ FIFO and Interrupt registers
     ADC_BASE $08 + constant ADC_FCS
     ADC_BASE $0C + constant ADC_FIFO
@@ -54,7 +57,7 @@ end-module> import
     true ADC_FCS_ERR!   \ have conversion error alongside result
     0 ADC_CS_AINSEL!
     $f ADC_CS_RROBIN!   \ first 4 channels
-    4 ADC_FCS_THRESH!
+    ROBOT_ADC_#FIFO ADC_FCS_THRESH!
     true ADC_INTE_EN!
     true ADC_FCS_EN!
     true ADC_CS_START_MANY!
@@ -95,8 +98,9 @@ pin import
 interrupt import
 robot-core-adc import
 
-4 constant ROBOT_ADC_CH     \ must be a power of 2
-7 constant EMITTER_A        \ for 4 sensor wall - front emitters
+\ NOTICE relationship between ROBOT_ADC_CH and that loaded into ADC_CS_RROBIN!
+8 constant ROBOT_ADC_CH     \ must be a power of 2. We swapped from 4 to 8 to see ADC reading differences.
+7 constant EMITTER_A        \ for 4 sensor wall - front emitters, or LED
 4 constant EMITTER_B        \ for 3 sensor wall - 3 emitters, for 4 sensor wall - diagonal emitters
 
 variable adc_mode
@@ -137,12 +141,15 @@ variable emitter_enabled
     adc_mode @ 0= if
         dark_adc read-adc-fifo
         \ turn on LED(s)
-        emitter_enabled @ EMITTER_B pin!
+        emitter_enabled @
+        dup EMITTER_B pin!
+            EMITTER_A pin!
         start4adc
     else
         light_adc read-adc-fifo
         \ turn off LED(s)
         false EMITTER_B pin!
+        false EMITTER_A pin!
     then
     1 adc_mode +!
 ;
@@ -198,9 +205,9 @@ variable emitter_enabled
 
 : show-sensors
   cr
-  4 0 do I get_dark_adc .l space loop cr
-  4 0 do I get_light_adc .l space loop cr
-  4 0 do I get_sensor_level .l space loop cr
+  ROBOT_ADC_CH 0 do I get_dark_adc .l space loop cr
+  ROBOT_ADC_CH 0 do I get_light_adc .l space loop cr
+  ROBOT_ADC_CH 0 do I get_sensor_level .l space loop cr
 ;
 
 : offline-adc-test
