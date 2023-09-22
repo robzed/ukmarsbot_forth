@@ -30,6 +30,7 @@
 
 timer import 
 robot-adc import 
+interrupt import 
 
 0 constant ROBOT-TICK-ALARM \ what timer 0-3 we are using from RP2040
 variable max-robot-tick     \ the longest runtime in microseconds
