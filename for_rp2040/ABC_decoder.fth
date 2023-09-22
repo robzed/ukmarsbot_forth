@@ -524,6 +524,7 @@ variable current_volume
   ABC_decoder
   370 0 ABC_play_once
 ;
+: jetset ABC_test ;
 
 
 end-module
