@@ -400,4 +400,16 @@ end-module
 \ NinaPin_LEDG 128 analogWrite
 \ NinaPin_LEDG 255 analogWrite
 
+\ : -r NinaPin_LEDR 0 digitalWrite ;
+\ : +r NinaPin_LEDR 1 digitalWrite ;
+\ : -g NinaPin_LEDG 0 digitalWrite ;
+\ : +g NinaPin_LEDG 1 digitalWrite ;
+\ : -b NinaPin_LEDB 0 digitalWrite ;
+\ : +b NinaPin_LEDB 1 digitalWrite ;
+
+\ NinaPin_LEDR PinModeINPUT
+\ NinaPin_LEDR digitalRead . 
+
+
+
 
