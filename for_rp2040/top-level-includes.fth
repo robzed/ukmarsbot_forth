@@ -25,6 +25,10 @@ bip
 unused
 debugprompt
 
+main
+enable_emitters
+
+show-sensors
 
 
 
