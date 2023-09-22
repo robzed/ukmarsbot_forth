@@ -200,7 +200,7 @@ variable emitter_enabled
 ;
 
 : enable_emitters
-    false emitter_enabled !
+    true emitter_enabled !
 ; 
 
 : show-sensors
