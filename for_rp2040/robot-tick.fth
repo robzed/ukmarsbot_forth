@@ -29,6 +29,7 @@
 
 
 timer import 
+robot-adc import 
 
 0 constant ROBOT-TICK-ALARM \ what timer 0-3 we are using from RP2040
 variable max-robot-tick     \ the longest runtime in microseconds
@@ -90,6 +91,9 @@ variable robot-tick-xt
 
     ( do work here )
     enc_update
+
+    \ ADC conversion is the last thing to do 
+    start_conversion
 
     \ store the longest duration
     timer::us-counter-lsb swap -

@@ -11,6 +11,10 @@
 ;
 
 : main ( -- )
+    \ only init the first time
+    adc-fifo-irq NVIC_IPR_IP@ 6 rshift 2 <> if
+        init_robot-adc
+    then
     enc_setup
     setup-robot-tick
 ;
