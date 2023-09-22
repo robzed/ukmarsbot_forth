@@ -29,6 +29,13 @@ decimal
 
 \ Robot Specific Constants
 \ ========================
+\ General Calculated values to 'Constants' (actually reconfigurable)
+\ Includes formulas for 'constants'
+\ 
+\ Use of constants before value is to get around the Zeptforth 
+\ requirement to reboot before using values - since values are 
+\ calculated from values, you can't use them to define further values.
+
 
 \ These allow you to select the forward count direction based on wiring, and orientation
 \ encoder polarity is either 1 or -1 and is used to account for reversal of the encoder phases
@@ -38,52 +45,55 @@ decimal
 \ The robot is likely to have wheels of different diameters and that must be
 \ compensated for if the robot is to reliably drive in a straight line.
 \ Negative makes robot curve to left
-0,0025 fvalue ROTATION_BIAS
+0,0025 fconstant ROTATION_BIAS_DEFAULT
 
 \ these are in millimeters = mm
-32,0 fvalue WHEEL_DIA    \ mm, adjust on test
-12,0 fvalue ENCODER_PULSES \ per motor rev
-19,540 fvalue GEAR_RATIO
-37,0 fvalue MOUSE_RADIUS \ mm ... in reality this might be smaller or larger because of the contact patch between the wheels, so adjust on test.
-
-
-\ ---------------------------------------------------
-\ General Constants
+32,0 fconstant   WHEEL_DIA_DEFAULT      \ mm, adjust on test
+12,0 fconstant   ENCODER_PULSES_DEFAULT \ per motor rev
+19,540 fconstant GEAR_RATIO_DEFAULT
+37,0 fconstant   MOUSE_RADIUS_DEFAULT   \ mm ... in reality this might be smaller or larger because of the contact patch between the wheels, so adjust on test.
 
 500,0 fconstant LOOP_FREQ
 \ not required for zeptoforth
 \ 3,1415926499 fconstant PI
 
-\ General Calculated values to 'Constants' (actually reconfigurable)
-\ Includes formulas for 'constants'
-\ =================================================================
+\
+\ Define the actual values we use - these allow adjustment at runtime.
+\ Call `calc-config` after adjusting
+\
+ROTATION_BIAS_DEFAULT  fvalue ROTATION_BIAS
+WHEEL_DIA_DEFAULT      fvalue WHEEL_DIA
+ENCODER_PULSES_DEFAULT fvalue ENCODER_PULSES
+GEAR_RATIO_DEFAULT     fvalue GEAR_RATIO
+MOUSE_RADIUS_DEFAULT   fvalue MOUSE_RADIUS
 
-: calc_wheel_circum ( -- f ) WHEEL_DIA PI f* ; 
-calc_wheel_circum   fvalue WHEEL_CIRCUM  \ mm
+\ ---------------------------------------------------
+\ General Formulas
 
-: calc_pulses/rev ( -- f ) ENCODER_PULSES GEAR_RATIO f* ;
-calc_pulses/rev     fvalue PULSES/REV
-
-\ this the basic mm per pulse value
-: calc_mm/count ( -- f ) WHEEL_CIRCUM PULSES/REV f/ ;
-calc_mm/count       fvalue BASIC_mm/count
-
-\ MM_PER_COUNT_LEFT = (1 - ROTATION_BIAS) * PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);
-\ MM_PER_COUNT_RIGHT = (1 + ROTATION_BIAS) * PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);
-
-\ Finally the mm/COUNT for each side.
-\ NOTICE: 2/ gives us an asymetric result, which allows us to leverage the bottom bit
-\ usually this is about 428
-: calc_mm/count_left ( -- f ) 1,0 ROTATION_BIAS f- BASIC_mm/count f* ;
-calc_mm/count_left  fvalue mm/COUNT_LEFT
-
-: calc_mm/count_right ( -- f ) 1,0 ROTATION_BIAS f+ BASIC_mm/count f* ;
-calc_mm/count_right fvalue mm/COUNT_RIGHT
+: diameter>circum ( f.diameter -- f ) PI f* ; 
+: calc_mm/count_left ( f.mm/count f.bias -- f ) 1,0 fswap f- f* ;
+: calc_mm/count_right ( f.mm/count f.bias -- f ) 1,0 f+ f* ;
 
 \ DEG_PER_MM_DIFFERENCE = (180.0 / (2 * MOUSE_RADIUS * PI));
+: calc_deg/mm_diff ( f.mouse_radius -- f ) 180,0 fswap 2,0 f* pi f* f/ ; 
 
-: calc_deg/mm_diff ( -- f ) 180,0 2,0 f/ WHEEL_CIRCUM f/ ; 
-calc_deg/mm_diff    fvalue DEG/mm_DIFFERENCE
+\ ---------------------------------------------------
+\ Main parameters as values
+
+
+\ MM_PER_COUNT_LEFT = (1 - ROTATION_BIAS) * PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO)
+\ MM_PER_COUNT_RIGHT = (1 + ROTATION_BIAS) * PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO)
+\ Calculate the mm/COUNT for each side.
+\ NOTICE: 2/ gives us an asymetric result, which allows us to leverage the bottom bit
+\ usually this is about 428
+WHEEL_DIA_DEFAULT diameter>circum            \ wheel circumference
+ENCODER_PULSES_DEFAULT GEAR_RATIO_DEFAULT f* \ pulses per wheel revolution (as opposed to pulses per motor revolution)
+( wheel circumference ) ( pulses / rev ) f/  \ basic mm/count without left/right adjustment
+fdup ( BASIC_mm/count ) ROTATION_BIAS_DEFAULT calc_mm/count_left  fvalue mm/COUNT_LEFT
+     ( BASIC_mm/count ) ROTATION_BIAS_DEFAULT calc_mm/count_right fvalue mm/COUNT_RIGHT
+
+MOUSE_RADIUS_DEFAULT calc_deg/mm_diff    fvalue DEG/mm_DIFFERENCE
+
 
 \
 \ recalculate calculated values
@@ -91,16 +101,23 @@ calc_deg/mm_diff    fvalue DEG/mm_DIFFERENCE
 : calc-config
     \ 
     \ notice the calculations should be the same as above
-    \ 
-    calc_wheel_circum   to WHEEL_CIRCUM  \ mm
-    calc_pulses/rev     to PULSES/REV
-    calc_mm/count       to BASIC_mm/count
-    calc_mm/count_left  to mm/COUNT_LEFT
-    calc_mm/count_right to mm/COUNT_RIGHT
-    calc_deg/mm_diff    to DEG/mm_DIFFERENCE
+    WHEEL_DIA diameter>circum            \ wheel circumference
+    ENCODER_PULSES GEAR_RATIO_DEFAULT f* \ pulses per wheel revolution (as opposed to pulses per motor revolution)
+    ( wheel circumference ) ( pulses / rev ) f/  \ basic mm/count without left/right adjustment
+    fdup ( BASIC_mm/count ) ROTATION_BIAS calc_mm/count_left  to mm/COUNT_LEFT
+         ( BASIC_mm/count ) ROTATION_BIAS calc_mm/count_right to mm/COUNT_RIGHT
+
+    \ DEG_PER_MM_DIFFERENCE = (180.0 / (2 * MOUSE_RADIUS * PI));
+    MOUSE_RADIUS calc_deg/mm_diff to DEG/mm_DIFFERENCE
 ;
 
 : show-config
+    ." ROTATION_BIAS " ROTATION_BIAS f. cr
+    ." WHEEL_DIA " WHEEL_DIA f. cr
+    ." ENCODER_PULSES " ENCODER_PULSES f. cr
+    ." GEAR_RATIO " GEAR_RATIO f. cr
+    ." MOUSE_RADIUS " MOUSE_RADIUS f. cr
+
     ." mm/COUNT_LEFT " mm/COUNT_LEFT f. cr
     ." mm/COUNT_RIGHT " mm/COUNT_RIGHT f. cr
     ." DEG/mm_DIFFERENCE " DEG/mm_DIFFERENCE f. cr
