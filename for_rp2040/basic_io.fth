@@ -39,17 +39,17 @@
   \ p15 D3 - Right Clk A
   \ p16 D4 - Left B
   \ p17 D5 - Right B
-  \ p18 D6 - User IO (used for clk because of duplicate PWM channel P21 and P5)
+  \ p18 D6 - User IO (used for Left PWM because of duplicate PWM channel P21 and P5) (PWM1A)
   \ p19 D7 - Left Dir
 
 \ D8 - D13
 
   \ p20 D8 - Right Dir
-  \ p21 D9 - Left PWM
-  \ p5  D10 - Right PWM
+  \ p21 D9 - Left PWM (PWM2B) **NOT** Left PWM - leave as input!
+  \ p5  D10 - Right PWM (PWM2B)
   \ p7  D11 / SPITX - Emitter A (only used on 4 wall sensor board and mini wide, LED on other boards)
   \ p4  D12 / SPIRX - Emitter B (used on all)
-  \ p6  D13 / SPICLK / LEDB - Buzzer
+  \ p6  D13 / SPICLK / LEDB - Buzzer (PWM3A)
 
 \ Analog as digital
 \ A4 to A7 are controlled by Nina module and exposed via different APIs
