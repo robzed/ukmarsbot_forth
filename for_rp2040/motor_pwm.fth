@@ -2,10 +2,12 @@
 \ (c) 2022-2023 Rob Probin 
 \ MIT License, see LICENSE file
 \ 
-\ BRIEF: Robot Motor PCB for RP2040 on Zeptoforth
+\ BRIEF: Robot Motor PWM for RP2040 on Zeptoforth
 
 pin import
 pwm import
+
+255 constant MOTOR_MAX_PWM
 
 #19 constant MOTOR_LEFT_DIR_PIN
 #20 constant MOTOR_RIGHT_DIR_PIN
@@ -17,14 +19,14 @@ pwm import
 : motor_right_pwm_compare! [inlined] pwm-counter-compare-b! ;
 
 : left_motor_pwm! ( n -- )
-    -255 max 255 min
+    MOTOR_MAX_PWM fnegate max MOTOR_MAX_PWM min
     MOTOR_LEFT_POLARITY *
     dup 0< MOTOR_LEFT_DIR_PIN pin!
     abs MOTOR_LEFT_PWM_SLICE motor_left_pwm_compare!
 ; 
 
 : right_motor_pwm! ( n -- )
-    -255 max 255 min
+    MOTOR_MAX_PWM fnegate max MOTOR_MAX_PWM min
     MOTOR_RIGHT_POLARITY *
     dup 0< MOTOR_RIGHT_DIR_PIN pin!
     abs MOTOR_RIGHT_PWM_SLICE motor_right_pwm_compare!
