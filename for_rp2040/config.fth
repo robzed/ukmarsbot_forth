@@ -36,11 +36,15 @@ decimal
 \ requirement to reboot before using values - since values are 
 \ calculated from values, you can't use them to define further values.
 
-
 \ These allow you to select the forward count direction based on wiring, and orientation
 \ encoder polarity is either 1 or -1 and is used to account for reversal of the encoder phases
 -1 constant ENC_LEFT_POL
  1 constant ENC_RIGHT_POL
+
+\ Ihe motors may be wired with different polarity and that is defined here so that
+\ setting a positive voltage always moves the robot forwards
+1 constant MOTOR_LEFT_POLARITY
+-1 constant MOTOR_RIGHT_POLARITY
 
 \ The robot is likely to have wheels of different diameters and that must be
 \ compensated for if the robot is to reliably drive in a straight line.

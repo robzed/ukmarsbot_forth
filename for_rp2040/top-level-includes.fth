@@ -16,20 +16,32 @@ compile-to-flash
 #include config.fth
 #include WiFiNINA_gpio.fth
 #include encoders.fth
+#include robot-adc.fth
+#include motor_pwm.fth
 compile-to-ram
 
-#include robot-adc.fth
 #include robot-tick.fth
 #include main-rp2040.fth
 bip
 unused
 debugprompt
-
 main
-enable_emitters
 
+
+\ ========================================
+\ test items
+
+
+robot-distance f. robot-angle f.
+
+\ testing
+enable_emitters
 show-sensors
 
 
+
+start_motor_pwm
+0 right_motor_pwm!
+0 left_motor_pwm!
 
 

@@ -200,12 +200,12 @@ io-irq 16 + constant io-vector
 ;
 
 : robot-omega ( -- omega )
-    rot_change di @ ei
+    rot_change di f@ ei
     LOOP_FREQ f*
 ;
 
 : robot-fwd-change@  ( -- distance )
-    fwd_change di @ ei
+    fwd_change di f@ ei
 ;
 
 : robot-rot-change@ ( -- distance )
