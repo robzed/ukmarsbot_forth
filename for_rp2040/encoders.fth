@@ -194,6 +194,11 @@ io-irq 16 + constant io-vector
     my_distance di f@ ei
 ;
 
+: robot-angle ( -- angle )
+    my_angle di f@ ei
+;
+
+
 : robot-speed ( -- speed )
     fwd_change di f@ ei
     LOOP_FREQ f*
@@ -204,15 +209,14 @@ io-irq 16 + constant io-vector
     LOOP_FREQ f*
 ;
 
+\ this is called from the robot-tick - so no atomic access required
 : robot-fwd-change@  ( -- distance )
-    fwd_change di f@ ei
+    fwd_change f@
 ;
 
+\ this is called from the robot-tick, do no atomic access required
 : robot-rot-change@ ( -- distance )
-    rot_change di f@ ei
+    rot_change f@
 ;
 
-: angle ( -- angle angle )
-    my_angle di f@ ei
-;
 
