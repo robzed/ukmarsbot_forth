@@ -6,8 +6,6 @@
 
 \ Based on  ukmars mazerunner core
 
-\ -config
-\ marker -config
 
 \ These are values rather than constants so they can be adjusted these from the Forth console.
 \ For Zeptoforth see https://github.com/tabemann/zeptoforth/wiki/VALUEs-and-Lexically-Scoped-Local-Variables
@@ -58,6 +56,8 @@ decimal
 37,0 fconstant   MOUSE_RADIUS_DEFAULT   \ mm ... in reality this might be smaller or larger because of the contact patch between the wheels, so adjust on test.
 
 500,0 fconstant LOOP_FREQ
+1,0 LOOP_FREQ f/ fconstant LOOP_INTERVAL
+
 \ not required for zeptoforth
 \ 3,1415926499 fconstant PI
 
