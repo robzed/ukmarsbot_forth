@@ -19,6 +19,9 @@
 : f2dup [inlined] 4dup ;
 : ei [inlined] enable-int ;
 : di [inlined] disable-int ;
+: fnegate [inlined] dnegate ;
+: fmin [inlined] dmin ;
+: fmax [inlined] dmin ;
 
 
 \ Flashforth uses floating constants like this: 1e10 -1e10 1.234e10 -1.234e10
