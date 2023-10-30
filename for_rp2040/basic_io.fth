@@ -19,7 +19,7 @@
 : BEEPS 0 DO beep 50 ms LOOP ;
 : bips 0 DO bip 500 ms loop ;
 : WARBLE ( hz1 hz2 ms -- )    3 0 DO 3RD OVER ttone 2DUP ttone LOOP DROP 2DROP ;
-: SIREN			400 550 400 WARBLE ;
+: SIREN  400 550 400 WARBLE ;
 : ZAP 3000 100 DO I 15 I 300 / - ttone 200 +LOOP ;
 : ZAPS ( cnt -- ) 0 DO ZAP 50 ms LOOP ;
 : SAUCER 10 0 DO 600 50 ttone 580 50 ttone LOOP ;

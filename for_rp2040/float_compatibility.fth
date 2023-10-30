@@ -22,7 +22,10 @@
 : fnegate [inlined] dnegate ;
 : fmin [inlined] dmin ;
 : fmax [inlined] dmin ;
-
+\ : f+! [inlined] ( inc addr -- ) dup f@ swap f+ swap f! ;
+: frot [inlined] 2rot ;
+: fdrop [inlined] 2drop ;
+: f-rot [inlined] ( f1 f2 f3 -- f3 f1 f2 ) frot frot ;
 
 \ Flashforth uses floating constants like this: 1e10 -1e10 1.234e10 -1.234e10
 \ unless you use this: float? which is Interpreter defer for parsing floating-point values. ' >float is float? PIC24-30-33 only
