@@ -299,7 +299,11 @@ create local_note_table
     [char] C key-sharp
     do_barline
 ;
-
+: g_major_key ( -- )
+    clear_key
+    [char] F key-sharp
+    do_barline
+;
 
 : ABC_next ( -- c | -1 )
     \ return 0 if no more
@@ -456,16 +460,49 @@ create local_note_table
     S" |" one_of if drop do_barline then
 ;
 
+\ (2 2 notes in the time of 3
+\ (3 3 notes in the time of 2
+\ (4 4 notes in the time of 3
+\ (5 5 notes in the time of n
+\ (6 6 notes in the time of 2
+\ (7 7 notes in the time of n
+\ (8 8 notes in the time of 3
+\ (9 9 notes in the time of n
 
+variable triplet_remaining
+2variable triplet_modifer
+
+: triplets_etc
+  S" (" one_of if
+    drop 
+    S" 3" one_of if
+      3 triplet_remaining !
+      0,66666 triplet_modifer 2!
+      drop
+    then
+  then 
+;
+
+: triplet_modification ( f -- f )
+  triplet_remaining @ 0<> if
+    -1 triplet_remaining +!
+    triplet_modifer 2@ f*
+  then
+;
+
+\ https://abcnotation.com/wiki/abc:standard:v2.1#duplets_triplets_quadruplets_etc
 : get_note ( -- false | float-Duration float-freq true )
     new_note
     barlines 
-    guitar-chords fiddle-bowing accents accidental
+    guitar-chords fiddle-bowing 
+    triplets_etc
+    accents accidental
     base-note false = if
         false exit
     then
     octave note-length
     finish_number
+    triplet_modification
     note_n @ rest_note = if
         0,0
     else
@@ -496,6 +533,7 @@ variable current_volume
 
 \ accepts zero for the two parameters and uses defaults
 : ABC_play_once ( tempo_bpm volume -- )
+    0 triplet_remaining !
 
     \ default volume
     dup 0= if drop 248 then
