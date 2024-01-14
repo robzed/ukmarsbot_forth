@@ -22,7 +22,7 @@
 : fnegate [inlined] dnegate ;
 : fmin [inlined] dmin ;
 : fmax [inlined] dmin ;
-\ : f+! [inlined] ( inc addr -- ) dup f@ swap f+ swap f! ;
+: f+! [inlined] ( f.inc addr -- ) dup >r f@ f+ r> f! ;
 : frot [inlined] 2rot ;
 : fdrop [inlined] 2drop ;
 : f-rot [inlined] ( f1 f2 f3 -- f3 f1 f2 ) frot frot ;
