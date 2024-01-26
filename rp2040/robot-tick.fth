@@ -116,6 +116,9 @@ variable robot-tick-xt
     set-next-alarm
 ;
 
+: .maxtick ( show max robot tick )
+  max-robot-tick u. ." µs  "
+;
 
 
 

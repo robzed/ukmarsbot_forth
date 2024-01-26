@@ -31,17 +31,20 @@ main
 \ ========================================
 \ test items
 
-
+\ test robot encoders
 robot-distance f. robot-angle f.
 
-\ testing
+\ test sensor levels
+\ dark, light, overall
 enable_emitters
 show-sensors
 
-
-
+\ 0 to 255
 start_motor_pwm
 0 right_motor_pwm!
 0 left_motor_pwm!
+
+100 right_motor_pwm!
+100 left_motor_pwm!
 
 
