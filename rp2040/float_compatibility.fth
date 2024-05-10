@@ -38,4 +38,16 @@
 \ ' ,>float is float?
 \ 
 
+\ For the ray tracer
+: f0< [inlined] 0,0 d< ;
+: f0> [inlined] 0,0 d> ;
+: fover [inlined] 2over ;
+: fsqrt [inlined] sqrt ;
+: 1/f [inlined] 1,0 fswap f/ ;
 
+: f<> [inlined] d<> ;
+: f= [inlined] d= ;
+: f> [inlined] d> ;
+: f< [inlined] d< ;
+
+: fcells ( n -- n ) 2 * CELLS ;
