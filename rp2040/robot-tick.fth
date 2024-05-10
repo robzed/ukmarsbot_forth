@@ -91,7 +91,12 @@ variable robot-tick-xt
     1 simple_tick +!
 
     ( do work here )
-    enc_update
+    enc_update    \ get encoder values because they continue to change
+    \ motion_update
+    \ sensors_update
+    \ battery_update - we might need to do this in a different task on the Arduino Nano RP2040 Connect because the ADC is slow for this channel
+
+    \ motor_update_controllers
 
     \ ADC conversion is the last thing to do 
     start_conversion
