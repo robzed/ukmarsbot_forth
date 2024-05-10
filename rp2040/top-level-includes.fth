@@ -47,4 +47,16 @@ start_motor_pwm
 100 right_motor_pwm!
 100 left_motor_pwm!
 
+\ Run the motors for 1 second
+\ 1000 ms = 1 second
+: run-motors-1s  ( -- )
+  1000 ms
+  100 right_motor_pwm!
+  100 left_motor_pwm!
+  1000 ms
+  0 right_motor_pwm!
+  0 left_motor_pwm!
+;
 
+\ test motor PWM
+run-motors-1s
