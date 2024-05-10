@@ -239,3 +239,8 @@ variable FF_right_oldSpeed
     stop_motors    
 ;
 
+true constant enable
+false constant disable
+
+: motor_controllers
+    motor_controller_enabled ! ;
