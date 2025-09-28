@@ -66,8 +66,8 @@ init-simple-font
     my-ssd1306 clear-bitmap
 
     \ Write a line of text to the display
-    S" Hello" 0 0 draw-text 
-    S" This is a test" 0 12 draw-text
+    S" UKMARSBot" 0 0 draw-text 
+    S" Rob Probin" 0 12 draw-text
     S" Zeptoforth" 20 24 draw-text
 
     \ Update the display
@@ -75,4 +75,5 @@ init-simple-font
 ;
 
 display_test
+
 

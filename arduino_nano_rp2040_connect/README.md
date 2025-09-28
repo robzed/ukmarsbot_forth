@@ -107,6 +107,31 @@ We could also use the I2C to connect an LCD display.
 
 The NINA W102 has a WiFi and Bluetooth. 
 
+## I2C
+
+i2c-scanner import
+
+12 13 0 scan-i2c
+
+Appeared 3C 6A 
+$3C constant SSD1306_I2C_ADDR
+
+LSM6DSOXTR I2C addresses
+ 
+    0x6A (HEX): This is the default I2C address, used when the SA0 pin is connected to ground (GND) or left floating. On many breakout boards, this connection is the default.
+  0x6B (HEX): This address is used when the SA0 pin is connected to a high voltage (3.3V)
+
+ATECC608A-MAHDA-T i2c address
+7-bit address: 0x60
+8-bit programmed address value: 0xC0
+
+## LEDs
+
+There are three LEDs on the Arduino Nano RP2040 Connect:
+
+ * DL1 - Green Power On LED (always on, via SJ2)
+ * DL2 - Orange LED connected to SPICLK~ / GPIO6. (Also connected to Buzzer on my robot.)
+ * DL3 - RGB LED connected to the NINA 
 
 ## Sensor Header vs. LCD
 
@@ -128,7 +153,7 @@ https://thepihut.com/products/0-96-oled-display-module-128x64?variant=4281002482
     - Buzzer on/off
     - Button input reading
     - Switch input reading
-    - LED on/off - on nano board
+    - LED on/off - on nano board. The GPIO is used for a passive buzzer, so normallty doesn't turn on
     - LED on/off - sensor board left/right LEDs
     - RGB LED - colours
     - motors forward/back
