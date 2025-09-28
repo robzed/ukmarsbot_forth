@@ -3,6 +3,8 @@ Basic control of the UKMARSBot in Forth for various targets:
 
 Arduino Nano (standard ATMega328) with FlashForth
 Arduino Nano RP2040 Connect with Zeptoforth
+Raspberry Pi Pico (or Pico W) with Zeptoforth
+
 
 # Environment
 
@@ -13,6 +15,7 @@ See individual README.md files inside each target
 
 This code is Licensed under the MIT license.
 
-(c) 2022-2024 Rob Probin.
+(c) 2022-2025 Rob Probin.
+
 
 

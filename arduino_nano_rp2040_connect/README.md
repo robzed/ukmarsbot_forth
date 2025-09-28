@@ -5,6 +5,11 @@ with Zeptoforth for Wall Following and Maze Solving
 
 # Environment
 
+I'm currently running Zeptforth Welcome to zeptoforth, Built for rp2040_big, version 1.14.2.3. 
+
+I also loaded Zeptoforth's ssd1306 onto the board - this is added onto with 'display.f'.
+
+
 
 
 # Licence
@@ -16,7 +21,7 @@ This code is Licensed under the MIT license.
 
 # GPIO Mapping for Arduino Nano RP2040 Connect on UKMARSBot
 
-The Arduino Nano RP20
+The Arduino Nano RP2040 Conect has set of GPIO that are mapped in this code as follows:
 
 Key: RP2040 Pin, Arduino Pin - ukmarsbot Function when it's a Arduino Nano RP2040 Connect
 
@@ -59,8 +64,9 @@ A7 - Battery
 
 ## I2C
 
-p12  A4 / SDA  -> D18  - Connected to IMU and ECC608 Authenticator (Crypto chip)
-p13  A5 / SCL  -> D19  - Connected to IMU and ECC608 Authenticator (Crypto chip)
+p12  A4 / SDA  -> D18  - Connected to IMU and ECC608 Authenticator (Crypto chip) - and also ssd1306 128x64 OLED display
+p13  A5 / SCL  -> D19  - Connected to IMU and ECC608 Authenticator (Crypto chip) - 
+
 
 ## Internal pins - D20 - D23
 
@@ -104,12 +110,15 @@ The NINA W102 has a WiFi and Bluetooth.
 
 ## Sensor Header vs. LCD
 
+0.96" OLED Display Module (128x64)
+
 The LCD has, from left to right: Vcc, GND, SCL, SDA.
 The left side of the UKMARSBot sensor connector has Vcc, GND, A5, A4.
 From above, we know that A4 is SDA, and A5 is SCL.
 
 So the two connections align. 
 
+https://thepihut.com/products/0-96-oled-display-module-128x64?variant=42810024820931
 
 
 # Features Considered

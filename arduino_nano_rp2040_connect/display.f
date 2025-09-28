@@ -1,7 +1,7 @@
 \ Display stuff on 0.96" OLED Display Module (128x64) from Pi Hut
 \ It is an I2C devices with SCL and SDA
 \ This is driven by the popular SSD1306.
-\
+\ https://thepihut.com/products/0-96-oled-display-module-128x64?variant=42810024820931
 
 oo import
 bitmap import
