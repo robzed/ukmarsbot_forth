@@ -2,6 +2,12 @@
 \ It is an I2C devices with SCL and SDA
 \ This is driven by the popular SSD1306.
 \ https://thepihut.com/products/0-96-oled-display-module-128x64?variant=42810024820931
+\
+\ For this to work you need to have done:
+\ compile-to-flash
+\ utils/codeload3.sh -B 115200 -p /dev/cu.usbmodem21401 serial extra/common/ssd1306_all.fs
+\ compile-to-ram
+\ reboot
 
 oo import
 bitmap import
