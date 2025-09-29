@@ -80,6 +80,4 @@ init-simple-font
     my-ssd1306 update-display
 ;
 
-display_test
-
 
